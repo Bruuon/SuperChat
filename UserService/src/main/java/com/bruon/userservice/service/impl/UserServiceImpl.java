@@ -5,11 +5,12 @@ import cn.hutool.core.lang.Snowflake;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.bruon.common.constant.CommonConstant;
+import com.bruon.common.common.ErrorCode;
+import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.utils.JwtUtil;
-import com.bruon.userservice.common.ErrorCode;
+
 import com.bruon.userservice.constant.UserConstant;
-import com.bruon.userservice.exception.ThrowUtils;
+
 import com.bruon.userservice.mapper.UserMapper;
 import com.bruon.userservice.model.dto.UserLoginCodeRequest;
 import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
@@ -20,7 +21,6 @@ import com.bruon.userservice.model.vo.TokenResponse;
 import com.bruon.userservice.service.UserService;
 
 import com.bruon.userservice.utils.EmailUtil;
-import com.bruon.userservice.utils.JwtUtil;
 import com.bruon.userservice.utils.RandomCodeUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;

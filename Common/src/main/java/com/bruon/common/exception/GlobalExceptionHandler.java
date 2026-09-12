@@ -1,20 +1,21 @@
-package com.bruon.aiservice.Exception;
+package com.bruon.common.exception;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
-
-import com.bruon.aiservice.common.BaseResponse;
-import com.bruon.aiservice.common.ErrorCode;
-import com.bruon.aiservice.common.ResultUtils;
+import com.bruon.common.common.BaseResponse;
+import com.bruon.common.common.ErrorCode;
+import com.bruon.common.common.ResultUtils;
 import dev.langchain4j.guardrail.InputGuardrailException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 全局异常处理器
@@ -47,6 +48,12 @@ public class GlobalExceptionHandler {
         return ResultUtils.error(ErrorCode.INVALID_PARAMETER_ERROR, message);
     }
 
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public BaseResponse<?> handleConstraintViolation(ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).findFirst().orElse("请求参数校验失败");
+        return ResultUtils.error(ErrorCode.PARAMS_ERROR, message);
+    }
 
     @ExceptionHandler(value = MissingServletRequestParameterException.class)
     public BaseResponse<?> handlerMissingServletRequestParameterException(Exception e) {

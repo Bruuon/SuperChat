@@ -1,7 +1,7 @@
-package com.bruon.aiservice.Exception;
+package com.bruon.common.exception;
 
 
-import com.bruon.aiservice.common.ErrorCode;
+import com.bruon.common.common.ErrorCode;
 
 /**
  * 自定义异常类

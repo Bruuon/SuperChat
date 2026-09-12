@@ -1,12 +1,14 @@
 package com.bruon.userservice.controller;
 
 
+import com.bruon.common.common.BaseResponse;
+import com.bruon.common.common.ErrorCode;
+import com.bruon.common.common.ResultUtils;
+import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.utils.JwtUtil;
-import com.bruon.userservice.common.BaseResponse;
-import com.bruon.userservice.common.ErrorCode;
-import com.bruon.userservice.common.ResultUtils;
+
 import com.bruon.userservice.constant.UserConstant;
-import com.bruon.userservice.exception.ThrowUtils;
+
 import com.bruon.userservice.model.dto.UserLoginCodeRequest;
 import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
 import com.bruon.userservice.model.dto.UserRegisterRequest;

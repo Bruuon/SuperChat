@@ -1,4 +1,4 @@
-package com.bruon.userservice.common;
+package com.bruon.common.common;
 
 /**
  * 返回工具类

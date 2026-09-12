@@ -1,4 +1,11 @@
-package com.bruon.aiservice.common;
+package com.bruon.common.common;
+
+/**
+ * 自定义错误码
+ *
+ * 注意：91xxx/92xxx 系列错误消息引用自 ValidationError 枚举，遵循单一数据源原则
+ */
+
 
 /**
  * 自定义错误码

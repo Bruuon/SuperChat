@@ -1,9 +1,10 @@
-package com.bruon.userservice.common;
+package com.bruon.common.common;
 
-import java.io.Serializable;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
 
 /**
  * 通用返回类
