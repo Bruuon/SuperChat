@@ -1,9 +1,9 @@
 package com.bruon.userservice.handler;
 
+import com.bruon.common.constant.CommonConstant;
+import com.bruon.common.utils.JwtUtil;
 import com.bruon.userservice.common.ErrorCode;
-import com.bruon.userservice.constant.UserConstant;
 import com.bruon.userservice.exception.BusinessException;
-import com.bruon.userservice.utils.JwtUtil;
 
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;

@@ -1,6 +1,7 @@
 package com.bruon.userservice.controller;
 
 
+import com.bruon.common.utils.JwtUtil;
 import com.bruon.userservice.common.BaseResponse;
 import com.bruon.userservice.common.ErrorCode;
 import com.bruon.userservice.common.ResultUtils;
@@ -12,7 +13,6 @@ import com.bruon.userservice.model.dto.UserRegisterRequest;
 import com.bruon.userservice.model.vo.LoginAndRegisterResponse;
 import com.bruon.userservice.model.vo.TokenResponse;
 import com.bruon.userservice.service.UserService;
-import com.bruon.userservice.utils.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
