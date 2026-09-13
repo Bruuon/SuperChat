@@ -6,13 +6,17 @@ import com.bruon.common.constant.SessionTypeConstant;
 import com.bruon.common.model.dto.MessageRequest;
 import com.bruon.common.model.vo.MessageResponse;
 import com.bruon.common.utils.FormatDateUtil;
+import com.bruon.realtimeservice.client.UserServiceClient;
 import com.bruon.realtimeservice.websocket.ChannelManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -20,7 +24,11 @@ import org.springframework.stereotype.Service;
 public class ConsumerMessageService {
 
 
-    @KafkaListener(topics = "message-topic", groupId = "infinite-chat-push-group-0")
+    @Resource
+    private UserServiceClient userServiceClient;
+
+
+    @KafkaListener(topics = "push-topic", groupId = "superchat-push-group-0")
     public void consume(String message) {
         MessageRequest messageRequest = JSONUtil.toBean(message, MessageRequest.class);
         if (messageRequest.getSessionType() == SessionTypeConstant.SIGNAL_TYPE) {
@@ -33,13 +41,18 @@ public class ConsumerMessageService {
 
     public void signalMessage(MessageRequest messageRequest) {
         MessageResponse messageResponse = createMessageResponse(messageRequest);
-        // pushMessageToUser(messageResponse, messageRequest.getSenderId());
+        pushMessageToUser(messageResponse, messageRequest.getSenderId());
         pushMessageToUser(messageResponse, messageRequest.getReceiverId());
+        log.info(messageRequest.getSenderId() + " " + messageRequest.getReceiverId());
 
     }
 
     public void groupMessage(MessageRequest messageRequest) {
-        // todo
+        List<Long> receiveUserIds = userServiceClient.getUserIdBySessionId(messageRequest.getSessionId());
+        MessageResponse messageResponse = createMessageResponse(messageRequest);
+        for (Long receiveUserId : receiveUserIds) {
+            pushMessageToUser(messageResponse, receiveUserId);
+        }
     }
 
     public MessageResponse createMessageResponse(MessageRequest messageRequest) {

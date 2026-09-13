@@ -21,7 +21,7 @@ spring:
       acks: all
       retries: 3
     consumer:
-      group-id: infinite-chat-push-group                # 消费者组 ID
+      group-id: superchat-push-group                # 消费者组 ID
       auto-offset-reset: earliest       # earliest / latest / none
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer

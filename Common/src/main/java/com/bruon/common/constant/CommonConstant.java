@@ -27,4 +27,9 @@ public class CommonConstant {
     public static final String DISCOVERY_CLIENT_NAME = "RealTimeService";
 
     public static final String NETTY_SERVICE_URI = "/ws/netty";
+
+
+    public static final String BUCKET_NAME = "SuperChat";
+
+    public static final Integer PICTURE_EXPIRE_TIME = 3000;
 }

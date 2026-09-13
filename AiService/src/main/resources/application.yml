@@ -29,17 +29,17 @@ langchain4j:
     dashscope:
       chat-model:
         model-name: qwen-max
-        api-key: xxxxx
+        api-key: xxxx
       streaming-chat-model:
         model-name: qwen-max
-        api-key: xxxxx
+        api-key: xxxx
       embedding-model:
         model-name: text-embedding-v4
-        api-key: xxxxx
+        api-key: xxx
 
 
 bigmodel:
-  api-key: xxxxx
+  api-key: xxx
 
 
 management:

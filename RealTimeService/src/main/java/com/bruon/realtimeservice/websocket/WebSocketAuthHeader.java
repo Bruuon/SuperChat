@@ -8,10 +8,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 
+@Slf4j
 @RequiredArgsConstructor
 public class WebSocketAuthHeader extends ChannelInboundHandlerAdapter {
 
@@ -47,6 +49,7 @@ public class WebSocketAuthHeader extends ChannelInboundHandlerAdapter {
                 // 3. 绑定用户与 channel
                 ChannelManager.addUserChannel(userId, ctx.channel());
                 ChannelManager.addChannelUser(userId, ctx.channel());
+
                 ctx.fireChannelRead(msg);
             } catch (Exception e) {
                 // 记录日志

@@ -18,7 +18,6 @@ public class MessageResponse {
     private Integer sessionType;
 
 
-
     private String createdTime;
 
 

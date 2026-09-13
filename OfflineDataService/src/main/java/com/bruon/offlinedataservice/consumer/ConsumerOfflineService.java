@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConsumerOfflineService {
     
-    @KafkaListener(topics = "store-topic", groupId = "infinite-chat-store-group")
+    @KafkaListener(topics = "store-topic", groupId = "superchat-store-group")
     public void consume(String message){
         System.out.println("Consumed message store: " + message);
         MessageRequest messageRequest = JSONUtil.toBean(message, MessageRequest.class);

@@ -53,7 +53,7 @@ public class NettyService {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline channelPipeline = socketChannel.pipeline();
-                        channelPipeline.addLast(new IdleStateHandler(60, 0, 0));
+                        channelPipeline.addLast(new IdleStateHandler(600000, 0, 0));
                         channelPipeline.addLast(new HttpServerCodec());
                         channelPipeline.addLast(new HttpObjectAggregator(65536));
                         channelPipeline.addLast(new WebSocketAuthHeader(stringRedisTemplate));

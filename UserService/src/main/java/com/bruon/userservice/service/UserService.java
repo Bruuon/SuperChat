@@ -1,12 +1,14 @@
 package com.bruon.userservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.bruon.userservice.model.dto.UpdateAvatarRequest;
 import com.bruon.userservice.model.dto.UserLoginCodeRequest;
 import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
 import com.bruon.userservice.model.dto.UserRegisterRequest;
 import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.vo.LoginAndRegisterResponse;
 import com.bruon.userservice.model.vo.TokenResponse;
+import com.bruon.userservice.model.vo.UploadUrlResponse;
 
 
 public interface UserService extends IService<User> {
@@ -29,4 +31,9 @@ public interface UserService extends IService<User> {
     TokenResponse refreshToken(String refreshToken);
 
     String refreshUri(Long userId);
+
+
+    UploadUrlResponse uploadUrl(String fileName) ;
+
+    Boolean updateAvatar(UpdateAvatarRequest updateAvatarRequest);
 }

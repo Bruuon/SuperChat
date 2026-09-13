@@ -13,8 +13,10 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 
 import java.util.Date;
+import java.util.concurrent.CompletableFuture;
 
 
 @Slf4j

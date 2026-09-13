@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 /**
  * 雪花 ID 生成工具类
  *
- * @author shanyang
+ * @author bruon
  */
 public class SnowflakeDynamicUtil {
 

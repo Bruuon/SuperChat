@@ -14,15 +14,18 @@ import com.bruon.userservice.constant.UserConstant;
 
 import com.bruon.userservice.loadbalancer.NettyServiceLocator;
 import com.bruon.userservice.mapper.UserMapper;
+import com.bruon.userservice.model.dto.UpdateAvatarRequest;
 import com.bruon.userservice.model.dto.UserLoginCodeRequest;
 import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
 import com.bruon.userservice.model.dto.UserRegisterRequest;
 import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.vo.LoginAndRegisterResponse;
 import com.bruon.userservice.model.vo.TokenResponse;
+import com.bruon.userservice.model.vo.UploadUrlResponse;
 import com.bruon.userservice.service.UserService;
 
 import com.bruon.userservice.utils.EmailUtil;
+import com.bruon.userservice.utils.OssUtils;
 import com.bruon.userservice.utils.RandomCodeUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.Resource;
@@ -196,6 +199,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public String refreshUri(Long userId) {
         return serviceInstanceUtil.getServiceInstance(String.valueOf(userId));
+    }
+
+
+
+
+    @Resource
+    private OssUtils ossUtils;
+
+    @Override
+    public UploadUrlResponse uploadUrl(String fileName) {
+        UploadUrlResponse uploadUrlResponse = new UploadUrlResponse();
+        uploadUrlResponse.setUploadUrl(ossUtils.uploadUrl(CommonConstant.BUCKET_NAME, fileName, CommonConstant.PICTURE_EXPIRE_TIME));
+        uploadUrlResponse.setDownloadUrl(ossUtils.downUrl(CommonConstant.BUCKET_NAME, fileName));
+        return uploadUrlResponse;
+    }
+
+    @Override
+    public Boolean updateAvatar(UpdateAvatarRequest updateAvatarRequest) {
+        User user = this.getById(updateAvatarRequest.getUserId());
+        if (user == null) {
+            return false;
+        }
+        user.setAvatar(updateAvatarRequest.getUri());
+        return this.updateById(user);
     }
 }
 
