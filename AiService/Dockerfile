@@ -15,7 +15,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制 jar
-COPY target/InfinteChat-Agent-0.0.1-SNAPSHOT.jar app.jar
+COPY target/SuperChat-0.0.1-SNAPSHOT.jar app.jar
 
 # 复制初始文档到镜像内的备份目录
 COPY src/main/resources/docs/ /init-docs/

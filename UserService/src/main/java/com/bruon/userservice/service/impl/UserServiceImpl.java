@@ -6,11 +6,13 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.bruon.common.common.ErrorCode;
+import com.bruon.common.constant.CommonConstant;
 import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.utils.JwtUtil;
 
 import com.bruon.userservice.constant.UserConstant;
 
+import com.bruon.userservice.loadbalancer.NettyServiceLocator;
 import com.bruon.userservice.mapper.UserMapper;
 import com.bruon.userservice.model.dto.UserLoginCodeRequest;
 import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
@@ -46,10 +48,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
+    @Resource
+    private NettyServiceLocator serviceInstanceUtil;
+
     @Override
     public void sendCaptcha(String targetEmail) {
         String existingCode = stringRedisTemplate.opsForValue().get(targetEmail);
-        ThrowUtils.throwIf(StringUtils.isNotBlank(existingCode), ErrorCode.LOGIN_SEND_CODE_ERROR);
+        ThrowUtils.throwIf(StringUtils.isNotBlank(existingCode), ErrorCode.LOGIN_ERROR_CODE);
 
         String randomCode = RandomCodeUtil.getRandomCode();
         emailUtil.sendEmail(targetEmail, randomCode);
@@ -70,7 +75,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
         // 验证密码是否相同
-        ThrowUtils.throwIf(!userRegisterRequest.getPassword().equals(userRegisterRequest.getConfirmPassword()),ErrorCode.LOGIN_PASSWORD_ERROR);
+        ThrowUtils.throwIf(!userRegisterRequest.getPassword().equals(userRegisterRequest.getConfirmPassword()),ErrorCode.LOGIN_ERROR);
 
 
         String password = userRegisterRequest.getPassword();
@@ -143,19 +148,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     public LoginAndRegisterResponse createJwt(LoginAndRegisterResponse loginAndRegisterResponse) {
         String userId = loginAndRegisterResponse.getUserId().toString();
-        String accessToken = JwtUtil.generate(userId, UserConstant.ACCESS_TOKEN_EXPIRE_TIME, UserConstant.ACCESS_TOKEN_UNIT);
-        String refreshToken = JwtUtil.generate(userId, UserConstant.REFRESH_TOKEN_EXPIRE_TIME, UserConstant.REFRESH_TOKEN_UNIT);
+        String accessToken = JwtUtil.generate(userId, CommonConstant.ACCESS_TOKEN_EXPIRE_TIME, CommonConstant.ACCESS_TOKEN_UNIT);
+        String refreshToken = JwtUtil.generate(userId, CommonConstant.REFRESH_TOKEN_EXPIRE_TIME, CommonConstant.REFRESH_TOKEN_UNIT);
         loginAndRegisterResponse.setAccessToken(accessToken);
         loginAndRegisterResponse.setRefreshToken(refreshToken);
-        stringRedisTemplate.opsForValue().set(UserConstant.ACCESS_TOKEN_PREFIX + userId, accessToken, UserConstant.ACCESS_TOKEN_EXPIRE_TIME, UserConstant.ACCESS_TOKEN_UNIT);
-        stringRedisTemplate.opsForValue().set(UserConstant.REFRESH_TOKEN_PREFIX + userId, refreshToken, UserConstant.REFRESH_TOKEN_EXPIRE_TIME, UserConstant.REFRESH_TOKEN_UNIT);
+        stringRedisTemplate.opsForValue().set(CommonConstant.ACCESS_TOKEN_PREFIX + userId, accessToken, CommonConstant.ACCESS_TOKEN_EXPIRE_TIME, CommonConstant.ACCESS_TOKEN_UNIT);
+        stringRedisTemplate.opsForValue().set(CommonConstant.REFRESH_TOKEN_PREFIX + userId, refreshToken, CommonConstant.REFRESH_TOKEN_EXPIRE_TIME, CommonConstant.REFRESH_TOKEN_UNIT);
+        String nettyUri = serviceInstanceUtil.getServiceInstance(loginAndRegisterResponse.getUserId().toString());
+        loginAndRegisterResponse.setNettyUri(nettyUri);
         return loginAndRegisterResponse;
     }
 
     @Override
     public boolean logout(String userId) {
-        stringRedisTemplate.delete(UserConstant.ACCESS_TOKEN_PREFIX + userId);
-        stringRedisTemplate.delete(UserConstant.REFRESH_TOKEN_PREFIX + userId);
+        stringRedisTemplate.delete(CommonConstant.ACCESS_TOKEN_PREFIX + userId);
+        stringRedisTemplate.delete(CommonConstant.REFRESH_TOKEN_PREFIX + userId);
         return true;
     }
 
@@ -171,18 +178,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userId = claims.getSubject();
 
         // 3. 校验 Redis，防止 Token 撤销攻击（实现单设备登录的关键）
-        String redisRefreshToken = stringRedisTemplate.opsForValue().get(UserConstant.REFRESH_TOKEN_PREFIX + userId);
+        String redisRefreshToken = stringRedisTemplate.opsForValue().get(CommonConstant.REFRESH_TOKEN_PREFIX + userId);
         ThrowUtils.throwIf(!refreshToken.equals(redisRefreshToken), ErrorCode.TOKEN_INVALID, "凭证已过期或在其他地方登录");
 
 
         // 4. 生成新的一对 Token
-        String newAccessToken = JwtUtil.generate(userId, UserConstant.ACCESS_TOKEN_EXPIRE_TIME, UserConstant.ACCESS_TOKEN_UNIT);
-        String newRefreshToken = JwtUtil.generate(userId, UserConstant.REFRESH_TOKEN_EXPIRE_TIME, UserConstant.REFRESH_TOKEN_UNIT);
+        String newAccessToken = JwtUtil.generate(userId, CommonConstant.ACCESS_TOKEN_EXPIRE_TIME, CommonConstant.ACCESS_TOKEN_UNIT);
+        String newRefreshToken = JwtUtil.generate(userId, CommonConstant.REFRESH_TOKEN_EXPIRE_TIME, CommonConstant.REFRESH_TOKEN_UNIT);
 
         // 5. 更新 Redis
-        stringRedisTemplate.opsForValue().set(UserConstant.ACCESS_TOKEN_PREFIX + userId, newAccessToken, UserConstant.ACCESS_TOKEN_EXPIRE_TIME, UserConstant.ACCESS_TOKEN_UNIT);
-        stringRedisTemplate.opsForValue().set(UserConstant.REFRESH_TOKEN_PREFIX + userId, newRefreshToken, UserConstant.REFRESH_TOKEN_EXPIRE_TIME, UserConstant.REFRESH_TOKEN_UNIT);
+        stringRedisTemplate.opsForValue().set(CommonConstant.ACCESS_TOKEN_PREFIX + userId, newAccessToken, CommonConstant.ACCESS_TOKEN_EXPIRE_TIME, CommonConstant.ACCESS_TOKEN_UNIT);
+        stringRedisTemplate.opsForValue().set(CommonConstant.REFRESH_TOKEN_PREFIX + userId, newRefreshToken, CommonConstant.REFRESH_TOKEN_EXPIRE_TIME, CommonConstant.REFRESH_TOKEN_UNIT);
         return TokenResponse.builder().accessToken(newAccessToken).refreshToken(newRefreshToken).build();
+    }
+
+
+    @Override
+    public String refreshUri(Long userId) {
+        return serviceInstanceUtil.getServiceInstance(String.valueOf(userId));
     }
 }
 
