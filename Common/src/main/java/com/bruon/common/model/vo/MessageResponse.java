@@ -1,6 +1,7 @@
 package com.bruon.common.model.vo;
 
 
+import com.bruon.common.model.dto.MessageBody;
 import lombok.Data;
 
 @Data
