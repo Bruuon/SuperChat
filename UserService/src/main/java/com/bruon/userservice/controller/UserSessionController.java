@@ -27,4 +27,10 @@ public class UserSessionController {
 
 
 
+    @GetMapping("/get/sessions")
+    List<Long> getSessionIdsByUserId(@RequestParam("userId")  Long userId) {
+        return userSessionService.getSessionIdsByUserId(userId);
+    }
+
+
 }

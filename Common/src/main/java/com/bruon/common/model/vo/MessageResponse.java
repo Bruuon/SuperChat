@@ -35,4 +35,7 @@ public class MessageResponse {
 
 
     private Integer role;
+
+
+    private MessageBody body;
 }

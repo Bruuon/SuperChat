@@ -4,12 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.bruon.userservice.mapper.UserSessionMapper;
-import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.entity.UserSession;
 import com.bruon.userservice.service.UserSessionService;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
