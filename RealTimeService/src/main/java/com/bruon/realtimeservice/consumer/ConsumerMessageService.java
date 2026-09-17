@@ -2,11 +2,16 @@ package com.bruon.realtimeservice.consumer;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
+import com.bruon.common.constant.CommonConstant;
 import com.bruon.common.constant.SessionTypeConstant;
+import com.bruon.common.model.dto.ChatRequest;
+import com.bruon.common.model.dto.MessageBody;
 import com.bruon.common.model.dto.MessageRequest;
 import com.bruon.common.model.vo.MessageResponse;
 import com.bruon.common.utils.FormatDateUtil;
+import com.bruon.realtimeservice.client.AiServiceClient;
 import com.bruon.realtimeservice.client.UserServiceClient;
+import com.bruon.realtimeservice.utils.SnowflakeDynamicUtil;
 import com.bruon.realtimeservice.websocket.ChannelManager;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
@@ -14,6 +19,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,6 +34,14 @@ public class ConsumerMessageService {
     private UserServiceClient userServiceClient;
 
 
+    @Resource
+    private AiServiceClient aiServiceClient;
+
+    @Resource
+    private KafkaTemplate<String, String> kafkaTemplate;
+
+
+
     @KafkaListener(topics = "push-topic", groupId = "superchat-push-group-0")
     public void consume(String message) {
         MessageRequest messageRequest = JSONUtil.toBean(message, MessageRequest.class);
@@ -35,8 +49,43 @@ public class ConsumerMessageService {
             signalMessage(messageRequest);
         } else if (messageRequest.getSessionType() == SessionTypeConstant.GROUP_TYPE) {
             groupMessage(messageRequest);
+        } else if (messageRequest.getSessionType() == SessionTypeConstant.ROBOT_TYPE) {
+            aiSignalMessage(messageRequest);
         }
     }
+
+
+    public void aiSignalMessage(MessageRequest messageRequest) {
+        MessageResponse messageResponse = createMessageResponse(messageRequest);
+        messageResponse.setMessageId(SnowflakeDynamicUtil.nextId());
+        // 获取 AI 回复
+        ChatRequest chatRequest = new ChatRequest();
+        chatRequest.setPrompt(messageRequest.getBody().getContent());
+        chatRequest.setSessionId(messageRequest.getSessionId());
+        chatRequest.setUserId(messageRequest.getSenderId());
+        String chat = aiServiceClient.chat(chatRequest);
+
+
+        MessageBody messageBody = messageResponse.getBody();
+        messageBody.setContent(chat);
+        messageResponse.setBody(messageBody);
+        messageResponse.setSenderId(CommonConstant.AI_ID);
+
+        pushMessageToUser(messageResponse, chatRequest.getUserId());
+        BeanUtil.copyProperties(messageResponse,messageRequest);
+
+        kafkaTemplate.send(CommonConstant.KAFKA_MESSAGE_TOPIC_STORE, JSONUtil.toJsonStr(messageRequest)).whenComplete((success, failure) -> {
+            if (failure != null) {
+                // 生产者生产失败
+                System.err.println("生产者生产失败: " + failure.getMessage());
+                // 记录日志、告警、补偿等
+            } else {
+                // 生产者生产成功
+                System.out.println("生产者生产成功，offset: " + success.getRecordMetadata().offset());
+            }
+        });
+    }
+
 
 
     public void signalMessage(MessageRequest messageRequest) {

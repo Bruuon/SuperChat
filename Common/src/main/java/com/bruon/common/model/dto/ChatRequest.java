@@ -1,4 +1,4 @@
-package com.bruon.aiservice.model.dto;
+package com.bruon.common.model.dto;
 
 import lombok.Data;
 

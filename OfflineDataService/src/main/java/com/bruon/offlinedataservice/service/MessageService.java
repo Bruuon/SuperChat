@@ -6,6 +6,7 @@ import com.bruon.common.model.dto.MessageRequest;
 import com.bruon.common.model.vo.MessageResponse;
 import com.bruon.offlinedataservice.model.dto.HistoryMessageRequest;
 import com.bruon.offlinedataservice.model.dto.OfflineMessageRequest;
+import com.bruon.offlinedataservice.model.dto.SessionSummaryRequest;
 import com.bruon.offlinedataservice.model.entity.Message;
 
 import java.util.List;
@@ -22,4 +23,7 @@ public interface MessageService extends IService<Message> {
 
 
     List<MessageResponse> getHistoryMessages(HistoryMessageRequest request);
+
+
+    String getSummary(SessionSummaryRequest sessionSummaryRequest);
 }

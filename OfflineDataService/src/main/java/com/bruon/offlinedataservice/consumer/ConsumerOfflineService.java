@@ -13,7 +13,7 @@ public class ConsumerOfflineService {
 
     @Resource
     private MessageService messageService;
-
+    
     @KafkaListener(topics = "store-topic", groupId = "superchat-store-group")
     public void consume(String message){
         System.out.println("Consumed message store: " + message);

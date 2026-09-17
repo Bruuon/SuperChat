@@ -11,10 +11,13 @@ import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.model.dto.MessageBody;
 import com.bruon.common.model.dto.MessageRequest;
 import com.bruon.common.model.vo.MessageResponse;
+import com.bruon.common.utils.FormatDateUtil;
+import com.bruon.offlinedataservice.client.AiServiceClient;
 import com.bruon.offlinedataservice.client.UserServiceClient;
 import com.bruon.offlinedataservice.mapper.MessageMapper;
 import com.bruon.offlinedataservice.model.dto.HistoryMessageRequest;
 import com.bruon.offlinedataservice.model.dto.OfflineMessageRequest;
+import com.bruon.offlinedataservice.model.dto.SessionSummaryRequest;
 import com.bruon.offlinedataservice.model.entity.Message;
 import com.bruon.offlinedataservice.service.MessageService;
 
@@ -23,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 
@@ -246,4 +252,51 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
         List<Message> messages = messageMapper.selectList(queryWrapper);
         return convertToResponses(messages);
     }
+
+
+
+    @Override
+    public String getSummary(SessionSummaryRequest sessionSummaryRequest) {
+        return  historyChatLog(sessionSummaryRequest.getSessionId(), sessionSummaryRequest.getHours());
+    }
+
+
+    @Resource
+    private AiServiceClient aiServiceClient;
+
+
+    public String historyChatLog(Long sessionId, Integer hours) {
+        Map<Long, String> userNickName = userServiceClient.getUserNickName(sessionId);
+
+        // 获取当前上海时间
+        ZoneId shanghai = ZoneId.of("Asia/Shanghai");
+        LocalDateTime nowShanghai = LocalDateTime.now(shanghai);
+        LocalDateTime threshold = nowShanghai.minusHours(hours);
+        // 格式化为 yyyy-MM-dd HH:mm:ss 字符串
+        String timeThresholdStr = threshold.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        QueryWrapper<Message> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("session_id", sessionId).ge("created_time", timeThresholdStr);
+
+        List<Message> messages = this.list(queryWrapper);
+        StringBuilder chatLog = new StringBuilder();
+
+        for (Message message : messages) {
+            Long senderId = message.getSenderId();
+            String senderName = userNickName.get(senderId);
+            String timeStr = FormatDateUtil.formatDate(message.getCreatedTime());
+            chatLog.append("[").append(senderName).append("] ").append(timeStr).append("：").append(message.getContent()).append("\n");
+        }
+
+        String result = "没有消息";
+        System.out.println(chatLog.toString().trim());
+        try {
+            result = aiServiceClient.chatSummary(chatLog.toString().trim());
+        } catch (Exception e) {
+            throw new RuntimeException("调用会话总结失败");
+        }
+
+        return result;
+    }
+
 }

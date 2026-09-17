@@ -9,6 +9,7 @@ import com.bruon.common.model.vo.MessageResponse;
 import com.bruon.offlinedataservice.model.dto.HistoryMessageRequest;
 import com.bruon.offlinedataservice.model.dto.OfflineMessageRequest;
 
+import com.bruon.offlinedataservice.model.dto.SessionSummaryRequest;
 import com.bruon.offlinedataservice.service.MessageService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
@@ -40,5 +41,12 @@ public class MessageController {
     public BaseResponse<List<MessageResponse>> getHistoryMessages(
             @RequestBody HistoryMessageRequest request) {
         return ResultUtils.success(messageService.getHistoryMessages(request));
+    }
+
+
+
+    @PostMapping("/summary")
+    public BaseResponse<String> chatSummary(@RequestBody SessionSummaryRequest sessionSummaryRequest) {
+        return ResultUtils.success(messageService.getSummary(sessionSummaryRequest));
     }
 }

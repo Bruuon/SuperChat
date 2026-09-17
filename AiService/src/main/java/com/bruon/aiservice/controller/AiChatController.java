@@ -4,18 +4,15 @@ package com.bruon.aiservice.controller;
 import com.bruon.aiservice.Monitor.MonitorContext;
 import com.bruon.aiservice.Monitor.MonitorContextHolder;
 import com.bruon.aiservice.ai.AiChat;
-import com.bruon.aiservice.model.dto.ChatRequest;
 import com.bruon.aiservice.model.dto.KnowledgeRequest;
+import com.bruon.common.model.dto.ChatRequest;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.store.embedding.EmbeddingStoreIngestor;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
@@ -26,6 +23,7 @@ import java.nio.file.StandardOpenOption;
 
 @RequestMapping("/api/ai")
 @Slf4j
+@RestController
 public class AiChatController {
 
     @Resource
@@ -135,6 +133,12 @@ public class AiChatController {
             log.error("RAG - 写入本地文件失败: {}", e.getMessage(), e);
             return false;
         }
+    }
+
+
+    @GetMapping("/summary")
+    public String chatSummary(@RequestParam String historyLog) {
+        return aiChat.chatSummary(historyLog);
     }
 }
 

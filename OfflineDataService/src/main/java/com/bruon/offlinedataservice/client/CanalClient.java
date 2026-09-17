@@ -19,6 +19,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +48,7 @@ public class CanalClient implements CommandLineRunner {
 
     private static final long IDLE_CHECK_INTERVAL = 5000; // 5秒检查一次空闲状态
     // 需要监听的表名集合
-    private static final Set<String> MONITOR_TABLES = Set.of("SuperChat.message");
+    private static final Set<String> MONITOR_TABLES = Set.of("superchat.message");
 
     @Override
     public void run(String... args) {
@@ -226,7 +229,46 @@ public class CanalClient implements CommandLineRunner {
         // 1. 构建完整的消息对象
         MessageResponse messageResponse = buildMessageFromMap(map);
         log.info("消息体：{}", messageResponse);
+        storeMessageToRedis(messageResponse);
 
+    }
+
+
+
+    private static final ThreadLocal<SimpleDateFormat> DATE_FORMATTER = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));
+        return sdf;
+    });
+
+
+    private void storeMessageToRedis(MessageResponse messageResponse) {
+        String key = CommonConstant.SESSION_KEY_REDIS + messageResponse.getSessionId();
+        String messageJson = JSON.toJSONString(messageResponse);
+
+        try {
+            double score = DATE_FORMATTER.get().parse(messageResponse.getCreatedTime()).getTime();
+            long cutoff = System.currentTimeMillis() - CommonConstant.SEVEN_DAYS_MILLIS;
+
+            stringRedisTemplate.executePipelined(new SessionCallback<>() {
+                @Override
+                @SuppressWarnings("NullableProblems")
+                public <K, V> Object execute(RedisOperations<K, V> operations) throws DataAccessException {
+                    StringRedisTemplate template = (StringRedisTemplate) operations;
+                    // 写入消息
+                    template.opsForZSet().add(key, messageJson, score);
+                    // 清理 7 天前的数据
+                    template.opsForZSet().removeRangeByScore(key, 0, cutoff);
+                    return null;
+                }
+            });
+            log.debug("消息已存入Redis, sessionId={}, messageId={}",
+                    messageResponse.getSessionId(), messageResponse.getMessageId());
+
+        } catch (Exception e) {
+            log.error("存储消息到Redis失败, sessionId={}, messageId={}",
+                    messageResponse.getSessionId(), messageResponse.getMessageId(), e);
+        }
     }
 
     private MessageResponse buildMessageFromMap(Map<String, String> map) {

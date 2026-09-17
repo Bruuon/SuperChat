@@ -27,6 +27,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/user")
 @Validated
@@ -93,6 +95,12 @@ public class UserController {
     @PostMapping("/update/avatar")
     public BaseResponse<Boolean> updateAvatar(@RequestBody UpdateAvatarRequest updateAvatarRequest)  {
         return ResultUtils.success(userService.updateAvatar(updateAvatarRequest));
+    }
+
+
+    @GetMapping("/get/nickname")
+    public Map<Long, String> getUserNickName(@RequestParam("sessionId")  Long sessionId) {
+        return userService.getUserNickName(sessionId);
     }
 }
 

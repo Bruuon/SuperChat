@@ -83,6 +83,13 @@
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
+
+        <dependency>
+            <groupId>com.bruon</groupId>
+            <artifactId>Common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
