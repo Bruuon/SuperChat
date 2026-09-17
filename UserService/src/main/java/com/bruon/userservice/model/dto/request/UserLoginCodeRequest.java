@@ -1,15 +1,15 @@
-package com.bruon.userservice.model.dto;
+package com.bruon.userservice.model.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 /**
  * 用户密码登录 DTO
  */
 @Data
-public class UserLoginPasswordRequest {
+public class UserLoginCodeRequest {
 
     /**
      * 邮箱
@@ -20,9 +20,11 @@ public class UserLoginPasswordRequest {
 
 
     /**
-     * 密码
+     * 验证码
      */
-    @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 20, message = "密码长度必须在6-20位之间")
-    private String password;
+    @NotBlank(message = "验证码不能为空")
+    @Pattern(regexp = "^\\d{6}$", message = "验证码必须是6位数字")
+    private String code;
 }
+
+

@@ -1,4 +1,4 @@
-package com.bruon.userservice.model.dto;
+package com.bruon.userservice.model.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

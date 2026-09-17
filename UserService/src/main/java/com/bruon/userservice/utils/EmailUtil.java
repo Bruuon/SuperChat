@@ -1,6 +1,6 @@
 package com.bruon.userservice.utils;
 
-import com.bruon.userservice.constant.UserConstant;
+import com.bruon.userservice.constants.UserConstant;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;

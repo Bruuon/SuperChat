@@ -1,10 +1,10 @@
 package com.bruon.userservice.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.bruon.userservice.model.dto.UpdateAvatarRequest;
-import com.bruon.userservice.model.dto.UserLoginCodeRequest;
-import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
-import com.bruon.userservice.model.dto.UserRegisterRequest;
+import com.bruon.userservice.model.dto.request.UpdateAvatarRequest;
+import com.bruon.userservice.model.dto.request.UserLoginCodeRequest;
+import com.bruon.userservice.model.dto.request.UserLoginPasswordRequest;
+import com.bruon.userservice.model.dto.request.UserRegisterRequest;
 import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.vo.LoginAndRegisterResponse;
 import com.bruon.userservice.model.vo.TokenResponse;

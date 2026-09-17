@@ -7,12 +7,12 @@ import com.bruon.common.common.ResultUtils;
 import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.utils.JwtUtil;
 
-import com.bruon.userservice.constant.UserConstant;
+import com.bruon.userservice.constants.UserConstant;
 
-import com.bruon.userservice.model.dto.UpdateAvatarRequest;
-import com.bruon.userservice.model.dto.UserLoginCodeRequest;
-import com.bruon.userservice.model.dto.UserLoginPasswordRequest;
-import com.bruon.userservice.model.dto.UserRegisterRequest;
+import com.bruon.userservice.model.dto.request.UpdateAvatarRequest;
+import com.bruon.userservice.model.dto.request.UserLoginCodeRequest;
+import com.bruon.userservice.model.dto.request.UserLoginPasswordRequest;
+import com.bruon.userservice.model.dto.request.UserRegisterRequest;
 import com.bruon.userservice.model.vo.LoginAndRegisterResponse;
 import com.bruon.userservice.model.vo.TokenResponse;
 import com.bruon.userservice.model.vo.UploadUrlResponse;
