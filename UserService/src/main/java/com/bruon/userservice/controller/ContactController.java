@@ -1,5 +1,9 @@
 package com.bruon.userservice.controller;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.bruon.common.common.BaseResponse;
 import com.bruon.common.common.ErrorCode;
@@ -9,7 +13,9 @@ import com.bruon.common.model.dto.PageRequest;
 import com.bruon.common.model.dto.PageResponse;
 import com.bruon.userservice.model.dto.ApplyFriendDTO;
 import com.bruon.userservice.model.dto.FriendDTO;
+import com.bruon.userservice.model.dto.ModifyFriendApplicationResponse;
 import com.bruon.userservice.model.dto.request.AddFriendRequest;
+import com.bruon.userservice.model.dto.request.ModifyFriendApplicationRequest;
 import com.bruon.userservice.model.vo.FriendDetailVO;
 import com.bruon.userservice.service.ApplyFriendService;
 import com.bruon.userservice.service.FriendService;
@@ -147,6 +153,175 @@ public class ContactController {
             return ResultUtils.error(e.getCode(), e.getMessage());
         } catch (Exception e) {
             log.error("获取好友申请列表失败，用户ID：{}，原因：{}", userId, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 获取未读好友申请数量
+     *
+     * @param userId 用户ID
+     * @return 未读好友申请数量
+     */
+    @GetMapping("/{userId}/applyCount")
+    public BaseResponse<?> getUnreadApplyCount(@PathVariable Long userId) {
+        try {
+            int count = applyFriendService.getUnreadCount(userId);
+            HashMap<String, Integer> map = new HashMap<>();
+            map.put("count", count);
+            return ResultUtils.success(map);
+        } catch (BusinessException e) {
+            log.error("获取未读好友申请数量失败，用户ID：{}，原因：{}", userId, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("获取未读好友申请数量失败，用户ID：{}，原因：{}", userId, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 删除好友
+     *
+     * @param userId        用户ID
+     * @param receiveuserId 删除的好友ID
+     * @return 是否成功
+     */
+    @DeleteMapping("/{userId}/friend/{receiveuserId}")
+    public BaseResponse<?> deleteFriend(
+            @PathVariable String userId,
+            @PathVariable String receiveuserId) {
+        try {
+            Long userIdL = Long.valueOf(userId);
+            Long friendId = Long.valueOf(receiveuserId);
+            boolean result = friendService.deleteFriend(userIdL, friendId);
+            return ResultUtils.success(result);
+        } catch (NumberFormatException e) {
+            log.error("删除好友失败，用户ID格式错误，用户：{}，好友：{}", userId, receiveuserId);
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR, "用户ID格式错误");
+        } catch (BusinessException e) {
+            log.error("删除好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("删除好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 拉黑好友
+     *
+     * @param userId        用户ID
+     * @param receiveuserId 拉黑的好友ID
+     * @return 是否成功
+     */
+    @PostMapping("/{userId}/block/{receiveuserId}")
+    public BaseResponse<?> blockFriend(
+            @PathVariable String userId,
+            @PathVariable String receiveuserId) {
+        try {
+            Long userIdL = Long.valueOf(userId);
+            Long friendId = Long.valueOf(receiveuserId);
+            boolean result = friendService.blockFriend(userIdL, friendId);
+            return ResultUtils.success(result);
+        } catch (NumberFormatException e) {
+            log.error("拉黑好友失败，用户ID格式错误，用户：{}，好友：{}", userId, receiveuserId);
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR, "用户ID格式错误");
+        } catch (BusinessException e) {
+            log.error("拉黑好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("拉黑好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 取消拉黑好友
+     *
+     * @param userId        用户ID
+     * @param receiveuserId 取消拉黑的好友ID
+     * @return 是否成功
+     */
+    @DeleteMapping("/{userId}/block/{receiveuserId}")
+    public BaseResponse<?> unblockFriend(
+            @PathVariable String userId,
+            @PathVariable String receiveuserId) {
+        try {
+            Long userIdL = Long.valueOf(userId);
+            Long friendId = Long.valueOf(receiveuserId);
+            boolean result = friendService.unblockFriend(userIdL, friendId);
+            return ResultUtils.success(result);
+        } catch (NumberFormatException e) {
+            log.error("取消拉黑好友失败，用户ID格式错误，用户：{}，好友：{}", userId, receiveuserId);
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR, "用户ID格式错误");
+        } catch (BusinessException e) {
+            log.error("取消拉黑好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("取消拉黑好友失败，用户：{}，好友：{}，原因：{}", userId, receiveuserId, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+
+    /**
+     * 修改好友申请状态
+     *
+     * @param userId  用户ID
+     * @param status  状态（1:通过、2:拒绝、3:已读）
+     * @param request 用户ID列表
+     * @return 响应结果
+     */
+    @PostMapping("/{userId}/application/{status}")
+    public BaseResponse<?> modifyFriendApplicationStatus(
+            @PathVariable("userId") String userId,
+            @PathVariable("status") Integer status,
+            @Valid @RequestBody ModifyFriendApplicationRequest request) {
+        try {
+            Long receiverId = Long.valueOf(userId);
+            List<Long> senderIds = request.getReceiveuserIds().stream()
+                    .map(Long::valueOf)
+                    .collect(Collectors.toList());
+
+            ModifyFriendApplicationResponse response = applyFriendService.modifyApplicationStatus(receiverId, senderIds, status);
+
+            // 通过申请时返回会话信息，其他情况返回true
+            return ResultUtils.success(response != null ? response : true);
+        } catch (NumberFormatException e) {
+            log.error("修改好友申请状态失败，用户ID格式错误，用户：{}", userId);
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR, "用户ID格式错误");
+        } catch (IllegalArgumentException e) {
+            log.error("修改好友申请状态失败，状态值无效，用户：{}，状态：{}", userId, status);
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR, "不允许修改为该状态值");
+        } catch (BusinessException e) {
+            log.error("修改好友申请状态失败，用户：{}，状态：{}，原因：{}", userId, status, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("修改好友申请状态失败，用户：{}，状态：{}，原因：{}", userId, status, e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+
+    /**
+     * 获取好友详情
+     *
+     * @param userId   用户ID
+     * @param friendId 好友ID
+     * @return 好友详情
+     */
+    @GetMapping("/{userId}/friend/{friendId}")
+    public BaseResponse<?> getFriendDetail(
+            @PathVariable("userId") String userId,
+            @PathVariable("friendId") String friendId) {
+        try {
+            FriendDetailVO friendDetail = friendService.getFriendDetails(userId, friendId);
+            return ResultUtils.success(friendDetail);
+        } catch (BusinessException e) {
+            log.error("获取好友详情失败，用户：{}，好友：{}，原因：{}", userId, friendId, e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("获取好友详情失败，用户：{}，好友：{}，原因：{}", userId, friendId, e.getMessage(), e);
             return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
         }
     }
