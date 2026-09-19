@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.bruon.common.common.ErrorCode;
 import com.bruon.common.constant.CommonConstant;
+import com.bruon.common.constant.MessageTypeConstant;
 import com.bruon.common.exception.ThrowUtils;
 import com.bruon.common.model.dto.MessageBody;
 import com.bruon.common.model.dto.MessageRequest;
@@ -42,8 +43,15 @@ public class MessageServiceImpl extends ServiceImpl<MessageMapper, Message>
     public void saveMessageToMySQL(MessageRequest messageRequest) {
         Message message = new Message();
         BeanUtil.copyProperties(messageRequest, message);
-        message.setContent(messageRequest.getBody().getContent());
-        message.setReplyId(messageRequest.getBody().getReplyId());
+        MessageBody body = messageRequest.getBody();
+        Integer type = messageRequest.getType();
+        // 红包消息：将整个 body 序列化为 JSON 存入 content
+        if (type != null && type == MessageTypeConstant.RED_PACKET_MESSAGE) {
+            message.setContent(JSON.toJSONString(messageRequest.getBody()));
+        } else {
+            message.setContent(body.getContent());
+        }
+        message.setReplyId(body.getReplyId());
         ThrowUtils.throwIf(!this.save(message), ErrorCode.SYSTEM_ERROR);
     }
 

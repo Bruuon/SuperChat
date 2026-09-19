@@ -14,7 +14,7 @@ spring:
       password: e65K4t8w2
       timeout: 30000
   kafka:
-    bootstrap-servers: localhost:9092  # Kafka 服务地址，多个用逗号分隔
+    bootstrap-servers: 47.115.55.73:19092  # Kafka 服务地址，多个用逗号分隔
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
