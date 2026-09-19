@@ -1,20 +1,26 @@
 spring:
   data:
     redis:
-      host: xxxxxx
+      host: 120.24.145.229
       port: 59000
       password: e65K4t8w2
       ttl: 3600
       timeout: 30000
-
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://120.24.145.229:49152/SuperChat?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: gK3T9n%q2M@j7Z4
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 120.24.145.229:18375
 pgvector:
   database: dp
-  host: xxxxx
-  port : 54328
+  host: 120.24.145.229
+  port: 54328
   user: root
   password: e65K4t7z1
-  table: agent_embedding
-
-
+  table: dp_embedding
 rag:
   docs-path: /data/docs
