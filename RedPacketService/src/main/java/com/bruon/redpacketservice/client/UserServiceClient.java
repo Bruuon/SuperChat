@@ -30,14 +30,6 @@ public interface UserServiceClient {
     @GetMapping("/api/internal/user/status")
     BaseResponse<UserStatusResponse> getUserStatus(@RequestParam("userId") Long userId);
 
-    /**
-     * 获取群成员数量
-     *
-     * @param sessionId 会话 ID（群聊 ID）
-     * @return 群成员数量信息
-     */
-    @GetMapping("/api/internal/group/memberCount")
-    BaseResponse<GroupMemberCountResponse> getGroupMemberCount(@RequestParam("sessionId") Long sessionId);
 
     /**
      * 验证群成员资格
@@ -75,4 +67,18 @@ public interface UserServiceClient {
      */
     @GetMapping("/api/internal/users/batch")
     BaseResponse<Map<Long, UserInfosResponse>> batchGetUserInfos(@RequestParam("userIds") List<Long> userIds);
+
+    /**
+     * 获取会话内全部成员 userId
+     * <p>
+     * UserService 已有该端点（UserSessionController /api/user/get/receivers），
+     * 与 RealTimeService 推送侧使用的是同一个接口
+     * <p>
+     * 注意：该接口直接返回 List<Long>，没有包 BaseResponse
+     *
+     * @param sessionId 会话 ID
+     * @return 会话成员 ID 列表
+     */
+    @GetMapping("/api/user/get/receivers")
+    List<Long> getUserIdBySessionId(@RequestParam("sessionId") Long sessionId);
 }

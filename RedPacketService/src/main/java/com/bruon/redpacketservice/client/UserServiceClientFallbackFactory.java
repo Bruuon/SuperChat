@@ -39,13 +39,10 @@ public class UserServiceClientFallbackFactory implements FallbackFactory<UserSer
             }
 
             @Override
-            public BaseResponse<GroupMemberCountResponse> getGroupMemberCount(Long sessionId) {
-                log.error("UserService 不可用，无法获取群成员数量。sessionId={}, 原因: {}", sessionId, cause.getMessage());
-                return new BaseResponse<>(
-                        ValidationError.SERVICE_UNAVAILABLE.getCode(),
-                        null,
-                        "校验服务暂时不可用，请稍后重试"
-                );
+            public List<Long> getUserIdBySessionId(Long sessionId) {
+                log.error("UserService 不可用，无法获取会话成员列表。sessionId={}, 原因: {}",
+                        sessionId, cause.getMessage());
+                return List.of();
             }
 
             @Override

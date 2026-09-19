@@ -1,6 +1,10 @@
 package com.bruon.redpacketservice.service;
 
+import com.bruon.redpacketservice.model.dto.RedPacketReceiveRequest;
 import com.bruon.redpacketservice.model.dto.RedPacketSendRequest;
+import com.bruon.redpacketservice.model.vo.ReceiveResultVO;
+import com.bruon.redpacketservice.model.vo.RedPacketBasicVO;
+import com.bruon.redpacketservice.model.vo.RedPacketDetailVO;
 import com.bruon.redpacketservice.model.vo.RedPacketSendVO;
 
 /**
@@ -25,5 +29,51 @@ public interface RedPacketService {
      */
     void handleRedPacketExpiration(Long redPacketId);
 
+    /**
+     * 领取红包
+     *
+     * @param request 红包领取请求
+     * @return 领取结果
+     */
+    ReceiveResultVO receiveRedPacket(RedPacketReceiveRequest request);
+
+    /**
+     * 处理红包领取记录（Kafka 消费者调用）
+     *
+     * @param userId        用户 ID
+     * @param redPacketId   红包 ID
+     * @param receivedAmount 领取金额
+     * @param receiveTime   领取时间
+     */
+    void handleRedPacketReceive(Long userId, Long redPacketId, Long receivedAmount, Long receiveTime);
+
+
+    /**
+     * 处理红包领取完成（Kafka 消费者调用）
+     *
+     * @param redPacketId 红包 ID
+     */
+    void handleRedPacketCompleted(Long redPacketId);
+
+    /**
+     * 查询红包详情（分页）
+     *
+     * @param redPacketId 红包 ID
+     * @param pageNum     页码
+     * @param pageSize    每页大小
+     * @return 红包详情
+     */
+    RedPacketDetailVO getRedPacketDetail(Long redPacketId, int pageNum, int pageSize);
+
+
+
+
+    /**
+     * 查询红包基本信息（不含领取记录）
+     *
+     * @param redPacketId 红包 ID
+     * @return 红包基本信息
+     */
+    RedPacketBasicVO getRedPacketBasicInfo(Long redPacketId);
 
 }

@@ -1,5 +1,7 @@
 package com.bruon.redpacketservice.service.impl;
 
+import java.util.List;
+
 import com.bruon.common.common.BaseResponse;
 import com.bruon.common.constant.SessionTypeConstant;
 import com.bruon.common.constant.UserStateConstant;
@@ -45,10 +47,10 @@ public class RedPacketValidationServiceImpl implements RedPacketValidationServic
      * @throws BusinessException 校验失败时抛出
      */
     @Override
-    public void validateSendPermission(RedPacketSendRequest request) {
+    public List<Long> validateSendPermission(RedPacketSendRequest request) {
         if (!validationEnabled) {
             log.info("红包发送校验已禁用");
-            return;
+            return null;
         }
 
         Long senderId = request.getSenderId();
@@ -61,14 +63,15 @@ public class RedPacketValidationServiceImpl implements RedPacketValidationServic
 
         // 2. 根据会话类型进行不同校验
         if (SessionTypeConstant.SIGNAL_TYPE == sessionType) {
-            // 单聊校验
-            validateSingleChatPermission(request);
+            validateSingleChatPermission(request);          // 保持不变
         } else if (SessionTypeConstant.GROUP_TYPE == sessionType) {
-            // 群聊校验
-            validateGroupChatPermission(request);
+            List<Long> memberIds = validateGroupChatPermission(request);
+            log.debug("红包发送权限校验通过，senderId={}, sessionType={}", senderId, sessionType);
+            return memberIds;
         }
 
         log.debug("红包发送权限校验通过，senderId={}, sessionType={}", senderId, sessionType);
+        return null;
     }
 
     /**
@@ -190,7 +193,7 @@ public class RedPacketValidationServiceImpl implements RedPacketValidationServic
     /**
      * 群聊红包校验
      */
-    private void validateGroupChatPermission(RedPacketSendRequest request) {
+    private List<Long> validateGroupChatPermission(RedPacketSendRequest request) {
         Long senderId = request.getSenderId();
         Long sessionId = request.getSessionId();
         Integer totalCount = request.getBody().getTotalCount();
@@ -209,23 +212,21 @@ public class RedPacketValidationServiceImpl implements RedPacketValidationServic
             throw new BusinessException(NOT_GROUP_MEMBER.getCode(), "您不是该群成员，无法发送红包");
         }
 
-        // 2. 获取群成员数量
-        BaseResponse<GroupMemberCountResponse> countResponse =
-                userServiceClient.getGroupMemberCount(sessionId);
-
-        if (countResponse == null || countResponse.getCode() != 200 || countResponse.getData() == null) {
-            log.warn("校验服务不可用，无法获取群成员数量，sessionId={}", sessionId);
+        // 2. 获取群成员列表（原 getGroupMemberCount 由此替代：一次 Feign 同时拿到计数与快照）
+        List<Long> memberIds = userServiceClient.getUserIdBySessionId(sessionId);
+        if (memberIds == null || memberIds.isEmpty()) {
+            log.warn("校验服务不可用，无法获取群成员列表，sessionId={}", sessionId);
             throw new BusinessException(SERVICE_UNAVAILABLE.getCode(), SERVICE_UNAVAILABLE.getMessage());
         }
+        int memberCount = memberIds.size();
 
-        Integer memberCount = countResponse.getData().getMemberCount();
-
-        // 3. 校验红包数量不超过群成员数量
+        // 3. 校验红包数量不超过群成员数量（原样，仅数据来源换成 memberCount 局部变量）
         if (totalCount > memberCount) {
             log.warn("红包数量超过群成员数量，totalCount={}, memberCount={}, sessionId={}",
                     totalCount, memberCount, sessionId);
             throw new BusinessException(ValidationError.REDPACKET_COUNT_EXCEED_MEMBERS.getCode(),
                     String.format("红包数量不能超过群成员数量（当前群成员数：%d）", memberCount));
         }
+        return memberIds;
     }
 }

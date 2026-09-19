@@ -70,7 +70,23 @@ public enum ValidationError {
     /**
      * 单聊只能发送普通红包
      */
-    REDPACKET_SINGLE_ONLY_NORMAL(92002, "单聊只能发送普通红包");
+    REDPACKET_SINGLE_ONLY_NORMAL(92002, "单聊只能发送普通红包"),
+
+    /**
+     * 不能领取自己发出的红包
+     */
+    REDPACKET_SENDER_CANNOT_RECEIVE(92003, "不能领取自己发出的红包，24 小时内未被领取将自动退回"),
+
+    /**
+     * 该红包不是发给你的
+     */
+    REDPACKET_NOT_THE_RECEIVER(92004, "该红包不是发给你的"),
+
+    /**
+     * 你不在该会话中
+     */
+    REDPACKET_NOT_IN_CONVERSATION(92005, "你不在该会话中，无法领取该红包");
+
 
     /**
      * 错误码
