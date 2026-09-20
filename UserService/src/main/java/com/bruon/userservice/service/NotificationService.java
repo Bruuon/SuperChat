@@ -1,6 +1,7 @@
 package com.bruon.userservice.service;
 
 import com.bruon.userservice.model.dto.FriendApplicationNotificationDTO;
+import com.bruon.userservice.model.dto.NewGroupSessionNotificationDTO;
 import com.bruon.userservice.model.dto.NewSessionNotificationDTO;
 
 /**
@@ -35,4 +36,15 @@ public interface NotificationService {
      * @param notification 新会话通知信息（包含sessionName和avatar）
      */
     void pushNewSession(Long senderId, Long userId, Long sessionId, Integer sessionType, NewSessionNotificationDTO notification);
+
+    /**
+     * 推送新群聊会话通知
+     * <p>
+     * 场景：用户被邀请加入群聊
+     *
+     * @param userId       接收通知的用户ID
+     * @param sessionId    群聊会话ID
+     * @param notification 新群聊会话通知信息（包含sessionName和avatar）
+     */
+    void pushGroupNewSession(Long userId, Long sessionId, NewGroupSessionNotificationDTO notification);
 }

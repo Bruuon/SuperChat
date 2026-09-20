@@ -1,8 +1,10 @@
 package com.bruon.userservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
+import com.bruon.common.enums.UserSessionStatusEnum;
 import com.bruon.userservice.mapper.UserSessionMapper;
 import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.entity.UserSession;
@@ -34,5 +36,13 @@ public class UserSessionServiceImpl extends ServiceImpl<UserSessionMapper, UserS
         queryWrapper.eq("user_id", userId);
         List<UserSession> userSessions = this.list(queryWrapper);
         return userSessions.stream().map(UserSession::getSessionId).collect(Collectors.toList());
+    }
+
+    @Override
+    public int getGroupMemberCount(Long sessionId) {
+        LambdaQueryWrapper<UserSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserSession::getSessionId, sessionId)
+                .eq(UserSession::getStatus, UserSessionStatusEnum.NORMAL.getCode());
+        return Math.toIntExact(this.count(wrapper));
     }
 }

@@ -2,9 +2,11 @@ package com.bruon.userservice.service.impl;
 
 
 import com.bruon.common.constant.MessageTypeConstant;
+import com.bruon.common.constant.SessionTypeConstant;
 import com.bruon.common.utils.SnowflakeUtil;
 import com.bruon.userservice.constants.KafkaTopicConstant;
 import com.bruon.userservice.model.dto.FriendApplicationNotificationDTO;
+import com.bruon.userservice.model.dto.NewGroupSessionNotificationDTO;
 import com.bruon.userservice.model.dto.NewSessionNotificationDTO;
 import com.bruon.userservice.model.dto.SystemNotificationMessage;
 import com.bruon.userservice.service.NotificationService;
@@ -117,6 +119,50 @@ public class NotificationServiceImpl implements NotificationService {
             log.error("发送新会话通知失败，用户ID: {}, 会话ID: {}, 错误: {}", userId, sessionId, e.getMessage(), e);
         }
     }
+
+
+
+    /**
+     * 推送新群聊会话通知
+     *
+     * 实现逻辑：
+     * 1. 构建完整的SystemNotificationMessage
+     * 2. 生成唯一messageId
+     * 3. 将sessionId、sessionType提升到顶层
+     * 4. 发送到Kafka的system-notification-topic
+     * 5. RealTimeService消费后推送给在线用户
+     *
+     * @param userId       接收通知的用户ID
+     * @param sessionId    群聊会话ID
+     * @param notification 新群聊会话通知信息（仅包含sessionName和avatar）
+     */
+    @Override
+    public void pushGroupNewSession(Long userId, Long sessionId, NewGroupSessionNotificationDTO notification) {
+        try {
+            SystemNotificationMessage message = new SystemNotificationMessage();
+            message.setMessageId(generateMessageId());
+            message.setSessionId(sessionId);
+            message.setSenderId(null); // 系统消息
+            message.setReceiverId(userId);
+            message.setType(MessageTypeConstant.TYPE_SYSTEM_NEW_GROUP_SESSION); // 103
+            message.setSessionType(SessionTypeConstant.GROUP_TYPE); // 群聊固定为1
+            message.setTimestamp(System.currentTimeMillis());
+
+            // 构建body
+            Map<String, Object> body = new HashMap<>();
+            body.put("sessionName", notification.getSessionName());
+            body.put("avatar", notification.getAvatar());
+            body.put("creatorId", notification.getCreatorId());
+            body.put("membersCount", notification.getMembersCount());
+            message.setBody(body);
+
+            sendNotification(message, "群组邀请通知");
+
+        } catch (Exception e) {
+            log.error("发送新群聊会话通知失败，用户ID: {}, 会话ID: {}, 错误: {}", userId, sessionId, e.getMessage(), e);
+        }
+    }
+
 
 
     /**
