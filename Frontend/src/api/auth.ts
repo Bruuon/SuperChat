@@ -2,6 +2,8 @@ import http from "./http";
 import type {
   BaseResponse,
   LoginAndRegisterResponse,
+  UpdateAvatarRequest,
+  UploadUrlResponse,
   UserLoginCodeRequest,
   UserLoginPasswordRequest,
   UserRegisterRequest,
@@ -38,16 +40,29 @@ export const authApi = {
     return res.data.data;
   },
 
-  async refreshUri(userId: number): Promise<string | null> {
+  async refreshUri(userId: string): Promise<string | null> {
     const res = await http.get<BaseResponse<string>>("/api/user/refresh/uri", { params: { userId } });
     return res.data.data;
   },
 
-  async getNicknames(sessionId: number): Promise<Record<string, string>> {
+  async getNicknames(sessionId: string): Promise<Record<string, string>> {
     // 该接口未套 BaseResponse，直接返回 Map<Long,String>
     const res = await http.get<Record<string, string>>("/api/user/get/nickname", {
       params: { sessionId },
     });
     return res.data;
+  },
+
+  /** 拿一个 MinIO 预签名 PUT 地址，用于直传头像原图 */
+  async getUploadUrl(fileName: string): Promise<UploadUrlResponse> {
+    const res = await http.get<BaseResponse<UploadUrlResponse>>("/api/user/uploadUrl", {
+      params: { fileName },
+    });
+    return res.data.data;
+  },
+
+  async updateAvatar(payload: UpdateAvatarRequest): Promise<boolean> {
+    const res = await http.post<BaseResponse<boolean>>("/api/user/update/avatar", payload);
+    return res.data.data;
   },
 };

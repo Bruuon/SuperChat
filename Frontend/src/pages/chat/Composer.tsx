@@ -4,10 +4,12 @@ import type { KeyboardEvent } from "react";
 interface ComposerProps {
   onSend: (text: string) => void;
   onOpenSendRedPacket: () => void;
+  /** AI 助手会话不支持发红包 */
+  allowRedPacket?: boolean;
   disabled?: boolean;
 }
 
-export function Composer({ onSend, onOpenSendRedPacket, disabled }: ComposerProps) {
+export function Composer({ onSend, onOpenSendRedPacket, allowRedPacket = true, disabled }: ComposerProps) {
   const [text, setText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
@@ -37,29 +39,31 @@ export function Composer({ onSend, onOpenSendRedPacket, disabled }: ComposerProp
   return (
     <div className="composer-wrap">
       <div className="composer">
-        <div className="composer-anchor">
-          <button className="plus-btn" title="添加" aria-label="添加" onClick={() => setMenuOpen((v) => !v)}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-          {menuOpen && (
-            <div className="attach-menu" onMouseLeave={() => setMenuOpen(false)}>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  onOpenSendRedPacket();
-                }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <rect x="4" y="4" width="16" height="16" rx="3" />
-                  <path d="M12 8v8M8 12h8" />
-                </svg>
-                发红包
-              </button>
-            </div>
-          )}
-        </div>
+        {allowRedPacket && (
+          <div className="composer-anchor">
+            <button className="plus-btn" title="添加" aria-label="添加" onClick={() => setMenuOpen((v) => !v)}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+            {menuOpen && (
+              <div className="attach-menu" onMouseLeave={() => setMenuOpen(false)}>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenSendRedPacket();
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <rect x="4" y="4" width="16" height="16" rx="3" />
+                    <path d="M12 8v8M8 12h8" />
+                  </svg>
+                  发红包
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <textarea
           ref={fieldRef}
           className="composer-field"

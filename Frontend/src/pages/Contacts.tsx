@@ -57,7 +57,7 @@ export default function Contacts() {
 
   async function addFriend(targetId: string) {
     try {
-      await contactApi.sendFriendRequest(userId, Number(targetId), {});
+      await contactApi.sendFriendRequest(userId, targetId, {});
       notify("好友申请已发送");
       setSearchResult(null);
       setKeyword("");
@@ -81,7 +81,7 @@ export default function Contacts() {
 
   async function removeFriend(friendId: string) {
     try {
-      await contactApi.deleteFriend(userId, Number(friendId));
+      await contactApi.deleteFriend(userId, friendId);
       setFriends((prev) => prev.filter((f) => f.userId !== friendId));
     } catch (e) {
       notifyError(e, "删除好友失败");

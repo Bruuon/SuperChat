@@ -8,7 +8,7 @@ import type { Conversation } from "@/types/chat";
 import { SessionType } from "@/types/api";
 
 interface NewGroupSheetProps {
-  currentUserId: number;
+  currentUserId: string;
   onClose: () => void;
   onCreated: (conversation: Conversation) => void;
 }
@@ -44,10 +44,10 @@ export function NewGroupSheet({ currentUserId, onClose, onCreated }: NewGroupShe
     try {
       const res = await groupApi.createGroup({
         creatorId: currentUserId,
-        memberIds: [...picked].map(Number),
+        memberIds: [...picked],
       });
       onCreated({
-        sessionId: Number(res.sessionId),
+        sessionId: res.sessionId,
         sessionType: SessionType.GROUP,
         name: res.sessionName,
         avatar: res.avatar,

@@ -7,7 +7,8 @@ const REFRESH_KEY = "superchat.refreshToken";
 const USER_KEY = "superchat.user";
 
 export interface StoredUser {
-  userId: number;
+  /** 雪花算法生成的 19 位 Long，精度超出 JS number，这里一律按字符串处理 */
+  userId: string;
   email: string;
   nickname: string;
   avatar: string | null;
@@ -56,6 +57,9 @@ export const tokenStore = {
   setTokens(accessToken: string, refreshToken: string) {
     safeSet(ACCESS_KEY, accessToken);
     safeSet(REFRESH_KEY, refreshToken);
+  },
+  setUser(user: StoredUser) {
+    safeSet(USER_KEY, JSON.stringify(user));
   },
   clear() {
     safeRemove(ACCESS_KEY);

@@ -19,7 +19,7 @@ function CloseBtn({ onClick }: { onClick: () => void }) {
 // -------------------- 发红包 --------------------
 interface SendSheetProps {
   conversation: Conversation;
-  currentUserId: number;
+  currentUserId: string;
   onClose: () => void;
   onSent: () => void;
 }
@@ -132,10 +132,10 @@ export function SendRedPacketSheet({ conversation, currentUserId, onClose, onSen
 // -------------------- 领红包 --------------------
 interface ClaimSheetProps {
   redPacketId: string;
-  senderId: number;
+  senderId: string;
   senderName: string;
   wrapperText?: string | null;
-  currentUserId: number;
+  currentUserId: string;
   onClose: () => void;
 }
 
@@ -154,7 +154,7 @@ export function ClaimRedPacketSheet({
 
   useEffect(() => {
     redPacketApi
-      .getBasic(Number(redPacketId))
+      .getBasic(redPacketId)
       .then((basic) =>
         setProgress({ received: basic.receivedCount, total: basic.totalCount, sum: basic.totalAmount }),
       )
@@ -164,10 +164,10 @@ export function ClaimRedPacketSheet({
   async function open() {
     setOpening(true);
     try {
-      const res = await redPacketApi.receive({ userId: currentUserId, redPacketId: Number(redPacketId) });
+      const res = await redPacketApi.receive({ userId: currentUserId, redPacketId });
       setResult({ amount: res.amount, message: res.message });
       redPacketApi
-        .getBasic(Number(redPacketId))
+        .getBasic(redPacketId)
         .then((basic) =>
           setProgress({ received: basic.receivedCount, total: basic.totalCount, sum: basic.totalAmount }),
         )

@@ -3,22 +3,29 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { contactApi } from "@/api/contact";
 import { messageApi } from "@/api/message";
+import { sessionApi } from "@/api/session";
 import { realtimeSocket } from "@/ws/socket";
-import type { MessageResponse } from "@/types/api";
+import type { MessageResponse, SessionSummary } from "@/types/api";
 import { MessageType, SessionType } from "@/types/api";
 import type { Conversation } from "@/types/chat";
 import { Sidebar } from "./Sidebar";
 import { Thread } from "./Thread";
 import { Composer } from "./Composer";
 import { NewGroupSheet } from "./NewGroupSheet";
+import { ProfileSheet } from "./ProfileSheet";
+import { GroupMembersSheet } from "./GroupMembersSheet";
 import { ClaimRedPacketSheet, SendRedPacketSheet } from "./RedPacketSheets";
 import "./chat.css";
+
+const AI_ASSISTANT_NAME = "SuperChat 助手";
 
 type PendingMessage = MessageResponse & { pending?: boolean };
 type Sheet =
   | { kind: "newGroup" }
   | { kind: "sendRedPacket" }
-  | { kind: "claimRedPacket"; redPacketId: string; senderId: number; senderName: string; wrapperText?: string | null }
+  | { kind: "claimRedPacket"; redPacketId: string; senderId: string; senderName: string; wrapperText?: string | null }
+  | { kind: "profile" }
+  | { kind: "members" }
   | null;
 
 const HISTORY_PAGE_SIZE = 20;
@@ -27,17 +34,17 @@ export default function ChatPage() {
   const { user } = useAuth();
   const { notifyError } = useToast();
 
-  const [conversations, setConversations] = useState<Record<number, Conversation>>({});
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [messagesBySession, setMessagesBySession] = useState<Record<number, PendingMessage[]>>({});
-  const [hasMoreBySession, setHasMoreBySession] = useState<Record<number, boolean>>({});
+  const [conversations, setConversations] = useState<Record<string, Conversation>>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [messagesBySession, setMessagesBySession] = useState<Record<string, PendingMessage[]>>({});
+  const [hasMoreBySession, setHasMoreBySession] = useState<Record<string, boolean>>({});
   const [loadingMore, setLoadingMore] = useState(false);
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [sheet, setSheet] = useState<Sheet>(null);
 
   // WS 回调是长期存活的闭包（effect 依赖只有 [user]），用 ref 存"当前打开的会话"
   // 才能让它每次都读到最新值，而不是订阅时那一刻的值。
-  const activeIdRef = useRef<number | null>(null);
+  const activeIdRef = useRef<string | null>(null);
   useEffect(() => {
     activeIdRef.current = activeId;
   }, [activeId]);
@@ -46,26 +53,51 @@ export default function ChatPage() {
   const active = activeId != null ? (conversations[activeId] ?? null) : null;
   const activeMessages = activeId != null ? (messagesBySession[activeId] ?? []) : [];
 
-  // ---- 初始加载：把好友列表转换成单聊会话 ----
+  // ---- 初始加载：拉全部会话（单聊/群聊/AI）+ 好友信息，拼出会话列表 ----
+  // Session 本身不带对方昵称/头像（单聊那栏是空的，靠好友表里的 sessionId 反查），
+  // 群聊和 AI 会话则直接用 Session 自己的字段。
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    contactApi
-      .getFriends(user.userId)
-      .then((page) => {
+
+    Promise.all([sessionApi.getMySessions(user.userId), contactApi.getFriends(user.userId)])
+      .then(([sessions, friendPage]) => {
         if (cancelled) return;
+        const friendBySession = new Map(friendPage.list.map((f) => [f.sessionId, f]));
+
         setConversations((prev) => {
           const next = { ...prev };
-          for (const f of page.list) {
-            const sid = Number(f.sessionId);
-            if (!next[sid]) {
+          for (const s of sessions as SessionSummary[]) {
+            const sid = s.sessionId;
+            const existing = next[sid];
+            if (s.type === SessionType.SIGNAL) {
+              const friend = friendBySession.get(sid);
               next[sid] = {
                 sessionId: sid,
                 sessionType: SessionType.SIGNAL,
-                name: f.nickname,
-                avatar: f.avatar,
-                peerId: Number(f.userId),
-                unread: 0,
+                name: friend?.nickname ?? existing?.name ?? "对方",
+                avatar: friend?.avatar ?? existing?.avatar,
+                peerId: friend ? friend.userId : existing?.peerId,
+                unread: existing?.unread ?? 0,
+                lastMessage: existing?.lastMessage,
+              };
+            } else if (s.type === SessionType.ROBOT) {
+              next[sid] = {
+                sessionId: sid,
+                sessionType: SessionType.ROBOT,
+                name: AI_ASSISTANT_NAME,
+                avatar: null,
+                unread: existing?.unread ?? 0,
+                lastMessage: existing?.lastMessage,
+              };
+            } else {
+              next[sid] = {
+                sessionId: sid,
+                sessionType: SessionType.GROUP,
+                name: s.name || "群聊",
+                avatar: s.avatar,
+                unread: existing?.unread ?? 0,
+                lastMessage: existing?.lastMessage,
               };
             }
           }
@@ -73,6 +105,7 @@ export default function ChatPage() {
         });
       })
       .catch((e) => notifyError(e, "会话列表加载失败"));
+
     return () => {
       cancelled = true;
     };
@@ -132,7 +165,7 @@ export default function ChatPage() {
     return unsubscribe;
   }, [user]);
 
-  const loadHistory = useCallback(async (sessionId: number, before: number) => {
+  const loadHistory = useCallback(async (sessionId: string, before: number) => {
     const list = await messageApi.getHistoryMessages({
       sessionId,
       beforeTime: before,
@@ -141,14 +174,14 @@ export default function ChatPage() {
     setMessagesBySession((prev) => {
       const existing = prev[sessionId] ?? [];
       const merged = [...list, ...existing];
-      const seen = new Set<number>();
+      const seen = new Set<string>();
       const dedup = merged.filter((m) => (seen.has(m.messageId) ? false : (seen.add(m.messageId), true)));
       return { ...prev, [sessionId]: dedup };
     });
     setHasMoreBySession((prev) => ({ ...prev, [sessionId]: list.length >= HISTORY_PAGE_SIZE }));
   }, []);
 
-  function selectConversation(sessionId: number) {
+  function selectConversation(sessionId: string) {
     setActiveId(sessionId);
     setMobileDetailOpen(true);
     setConversations((prev) =>
@@ -183,7 +216,7 @@ export default function ChatPage() {
       type: MessageType.TEXT,
       sessionType: active.sessionType,
       createdTime: new Date().toISOString().replace("T", " ").slice(0, 19),
-      messageId: -Date.now(),
+      messageId: `pending-${clientMessageId}`,
       clientMessageId,
       nickname: user.nickname,
       avatar: user.avatar ?? undefined,
@@ -209,6 +242,15 @@ export default function ChatPage() {
     });
   }
 
+  function handleLeftGroup(sessionId: string) {
+    setConversations((prev) => {
+      const next = { ...prev };
+      delete next[sessionId];
+      return next;
+    });
+    setActiveId((prev) => (prev === sessionId ? null : prev));
+  }
+
   const showThread = active != null && (mobileDetailOpen || !isMobile());
 
   return (
@@ -219,12 +261,13 @@ export default function ChatPage() {
           activeId={activeId}
           onSelect={selectConversation}
           onNewGroup={() => setSheet({ kind: "newGroup" })}
+          onOpenProfile={() => setSheet({ kind: "profile" })}
           detailOpenOnMobile={mobileDetailOpen}
         />
         <Thread
           conversation={showThread ? active : null}
           messages={activeMessages}
-          currentUserId={user?.userId ?? -1}
+          currentUserId={user?.userId ?? ""}
           onBack={() => setMobileDetailOpen(false)}
           onLoadMore={loadMore}
           hasMore={active ? !!hasMoreBySession[active.sessionId] : false}
@@ -238,9 +281,14 @@ export default function ChatPage() {
               wrapperText: msg.body.redPacketWrapperText,
             })
           }
+          onOpenMembers={() => setSheet({ kind: "members" })}
           composer={
             showThread ? (
-              <Composer onSend={sendText} onOpenSendRedPacket={() => setSheet({ kind: "sendRedPacket" })} />
+              <Composer
+                onSend={sendText}
+                onOpenSendRedPacket={() => setSheet({ kind: "sendRedPacket" })}
+                allowRedPacket={active?.sessionType !== SessionType.ROBOT}
+              />
             ) : null
           }
         />
@@ -273,6 +321,15 @@ export default function ChatPage() {
           wrapperText={sheet.wrapperText}
           currentUserId={user!.userId}
           onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === "profile" && <ProfileSheet onClose={() => setSheet(null)} />}
+      {sheet?.kind === "members" && active && (
+        <GroupMembersSheet
+          sessionId={active.sessionId}
+          currentUserId={user!.userId}
+          onClose={() => setSheet(null)}
+          onLeft={() => handleLeftGroup(active.sessionId)}
         />
       )}
     </div>

@@ -2,6 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import type { BaseResponse, TokenResponse } from "@/types/api";
 import { ErrorCode } from "@/types/api";
 import { tokenStore } from "./tokenStore";
+import { parseBigJson } from "@/utils/bigJson";
 
 export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? "http://localhost:10010";
@@ -17,6 +18,20 @@ export class ApiError extends Error {
 const http = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000,
+  // 后端的 userId/sessionId/messageId 都是雪花算法生成的 Long（19 位数字），
+  // 超出 JS Number 能精确表示的范围。默认的 JSON.parse 会把它们悄悄舍入，
+  // 导致前端拿到的 ID 跟后端实际存的对不上。这里换成大整数安全的解析，
+  // 把这些字段解析成精确的字符串——对应地 types/api.ts 里这些字段都是 string。
+  transformResponse: [
+    (data: unknown) => {
+      if (typeof data !== "string" || data.length === 0) return data;
+      try {
+        return parseBigJson(data);
+      } catch {
+        return data;
+      }
+    },
+  ],
 });
 
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {

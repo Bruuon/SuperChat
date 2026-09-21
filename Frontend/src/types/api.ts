@@ -47,8 +47,12 @@ export const MessageType = {
 } as const;
 
 // ---------- 鉴权 ----------
+// 注意：userId / sessionId / messageId 等 ID 字段在这个文件里一律是 string，
+// 不是 number——后端用雪花算法生成 19 位 Long，超出 JS Number 精确表示范围，
+// 当 number 处理会被静默舍入、指向错误的用户/会话/消息（http.ts 的
+// transformResponse 已经把响应里的这些字段解析成精确字符串了，这里的类型要跟上）。
 export interface LoginAndRegisterResponse {
-  userId: number;
+  userId: string;
   email: string;
   nickname: string;
   avatar: string | null;
@@ -136,8 +140,8 @@ export interface ModifyFriendApplicationResponse {
 
 // ---------- 群组 ----------
 export interface CreateGroupRequest {
-  creatorId: number;
-  memberIds: number[];
+  creatorId: string;
+  memberIds: string[];
 }
 
 export interface CreateGroupResponse {
@@ -150,9 +154,9 @@ export interface CreateGroupResponse {
 }
 
 export interface InviteGroupRequest {
-  sessionId: number;
-  inviterId: number;
-  inviteeIds: number[];
+  sessionId: string;
+  inviterId: string;
+  inviteeIds: string[];
 }
 
 export interface InviteGroupResponse {
@@ -160,33 +164,64 @@ export interface InviteGroupResponse {
   failedIds: string[];
 }
 
+export interface GroupMemberVO {
+  userId: string;
+  nickname: string;
+  avatar: string | null;
+  /** 0 群主，1 管理员，2 普通成员 */
+  role: number;
+}
+
+// ---------- 会话（UserSessionController /get/mySessions，直接映射后端 Session 实体） ----------
+export interface SessionSummary {
+  sessionId: string;
+  name: string | null;
+  /** 0 单聊 1 群聊 2 AI */
+  type: number;
+  status: number;
+  avatar: string | null;
+  createdTime: string;
+  updatedTime: string;
+}
+
+// ---------- 头像上传 ----------
+export interface UploadUrlResponse {
+  uploadUrl: string;
+  downloadUrl: string;
+}
+
+export interface UpdateAvatarRequest {
+  uri: string;
+  userId: string;
+}
+
 // ---------- 消息 ----------
 export interface MessageBody {
   content?: string;
-  replyId?: number | null;
+  replyId?: string | null;
   redPacketId?: string | null;
   redPacketWrapperText?: string | null;
 }
 
 export interface MessageRequest {
-  sessionId: number;
-  receiverId?: number | null;
-  senderId?: number;
+  sessionId: string;
+  receiverId?: string | null;
+  senderId?: string;
   type: number;
   sessionType: number;
   createdTime?: string;
-  messageId?: number;
+  messageId?: string;
   body: MessageBody;
   clientMessageId?: string;
 }
 
 export interface MessageResponse {
-  sessionId: number;
-  senderId: number;
+  sessionId: string;
+  senderId: string;
   type: number;
   sessionType: number;
   createdTime: string;
-  messageId: number;
+  messageId: string;
   clientMessageId?: string;
   nickname?: string;
   avatar?: string;
@@ -195,12 +230,12 @@ export interface MessageResponse {
 }
 
 export interface OfflineMessageRequest {
-  userId: number;
+  userId: string;
   offlineTime: number;
 }
 
 export interface HistoryMessageRequest {
-  sessionId: number;
+  sessionId: string;
   beforeTime: number;
   limit?: number;
 }
@@ -214,9 +249,9 @@ export interface RedPacketBody {
 }
 
 export interface RedPacketSendRequest {
-  sessionId: number;
-  receiverId?: number | null;
-  senderId: number;
+  sessionId: string;
+  receiverId?: string | null;
+  senderId: string;
   type: number;
   sessionType: number;
   body: RedPacketBody;
@@ -224,13 +259,13 @@ export interface RedPacketSendRequest {
 }
 
 export interface RedPacketSendVO {
-  redPacketId: number;
-  messageId: number;
+  redPacketId: string;
+  messageId: string;
 }
 
 export interface RedPacketReceiveRequest {
-  userId: number;
-  redPacketId: number;
+  userId: string;
+  redPacketId: string;
 }
 
 export interface ReceiveResultVO {
@@ -240,8 +275,8 @@ export interface ReceiveResultVO {
 }
 
 export interface RedPacketBasicVO {
-  redPacketId: number;
-  senderId: number;
+  redPacketId: string;
+  senderId: string;
   senderNickname?: string;
   totalAmount: number;
   totalCount: number;
@@ -251,7 +286,7 @@ export interface RedPacketBasicVO {
 }
 
 export interface RedPacketReceiveVO {
-  userId: number;
+  userId: string;
   nickname?: string;
   avatar?: string;
   amount: number;

@@ -21,8 +21,12 @@
   min-width: 0;
 }
 .list-head { flex: none; padding: 12px 18px 10px; }
-.switcher-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.list-title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 2px 0 12px; }
+.switcher-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.list-title { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 2px 0 12px; flex: 1; }
+.sidebar-profile-btn {
+  flex: none; border: 0; background: none; padding: 0; border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--surface-2), 0 0 0 3px var(--line-strong);
+}
 
 .header-actions { display: flex; gap: 6px; }
 
@@ -278,6 +282,14 @@
 .member-chip .avatar { width: 24px; height: 24px; font-size: 10px; }
 .member-chip.picked { background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)); border-color: var(--accent); }
 .member-chip.picked::after { content: "✓"; color: var(--accent); font-weight: 700; font-size: 12px; }
+
+.member-list { max-height: 50vh; overflow-y: auto; margin: 14px -6px 0; }
+.member-row { display: flex; align-items: center; gap: 11px; padding: 8px 6px; border-radius: 12px; }
+.member-row:hover { background: var(--line); }
+.member-row-body { flex: 1; min-width: 0; }
+.member-row-name { font-size: 14.5px; font-weight: 600; }
+.member-row-you { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.member-row-role { font-size: 12px; color: var(--muted); margin-top: 1px; }
 
 .rp-sheet { background: linear-gradient(180deg, var(--packet), var(--packet-2)); color: #fff; text-align: center; padding-top: 26px; }
 .rp-sheet .sheet-close { background: rgba(255, 255, 255, 0.18); color: #fff; }

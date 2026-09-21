@@ -1,15 +1,17 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Avatar } from "@/components/Avatar";
+import { useAuth } from "@/context/AuthContext";
 import type { Conversation } from "@/types/chat";
 import { SessionType } from "@/types/api";
 import { formatRelative } from "@/utils/format";
 
 interface SidebarProps {
   conversations: Conversation[];
-  activeId: number | null;
-  onSelect: (sessionId: number) => void;
+  activeId: string | null;
+  onSelect: (sessionId: string) => void;
   onNewGroup: () => void;
+  onOpenProfile: () => void;
   detailOpenOnMobile: boolean;
 }
 
@@ -20,7 +22,15 @@ function previewOf(c: Conversation): string {
   return body.content || "";
 }
 
-export function Sidebar({ conversations, activeId, onSelect, onNewGroup, detailOpenOnMobile }: SidebarProps) {
+export function Sidebar({
+  conversations,
+  activeId,
+  onSelect,
+  onNewGroup,
+  onOpenProfile,
+  detailOpenOnMobile,
+}: SidebarProps) {
+  const { user } = useAuth();
   const [keyword, setKeyword] = useState("");
 
   const filtered = useMemo(() => {
@@ -38,6 +48,9 @@ export function Sidebar({ conversations, activeId, onSelect, onNewGroup, detailO
     <div className={`pane-list${detailOpenOnMobile ? " detail-open" : ""}`}>
       <div className="list-head">
         <div className="switcher-row">
+          <button className="sidebar-profile-btn" onClick={onOpenProfile} aria-label="我的资料">
+            {user && <Avatar id={user.userId} name={user.nickname} src={user.avatar} size={30} />}
+          </button>
           <div className="list-title" style={{ margin: 0 }}>聊天</div>
           <div className="header-actions">
             <Link className="icon-pill-btn" to="/contacts" title="通讯录" aria-label="通讯录">

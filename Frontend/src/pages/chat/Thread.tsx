@@ -8,12 +8,13 @@ import { formatClock } from "@/utils/format";
 interface ThreadProps {
   conversation: Conversation | null;
   messages: MessageResponse[];
-  currentUserId: number;
+  currentUserId: string;
   onBack: () => void;
   onLoadMore: () => void;
   hasMore: boolean;
   loadingMore: boolean;
   onOpenRedPacket: (redPacketId: string, messageBody: MessageResponse) => void;
+  onOpenMembers: () => void;
   composer: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ export function Thread({
   hasMore,
   loadingMore,
   onOpenRedPacket,
+  onOpenMembers,
   composer,
 }: ThreadProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -88,6 +90,16 @@ export function Thread({
             </div>
           </div>
         </div>
+        {isGroup && (
+          <button className="icon-pill-btn" title="群成员" aria-label="群成员" onClick={onOpenMembers}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="9" cy="8" r="3" />
+              <path d="M2.5 19c0-3.3 2.9-5.7 6.5-5.7s6.5 2.4 6.5 5.7" />
+              <circle cx="17" cy="8.5" r="2.4" />
+              <path d="M15.5 13.6c2.9.4 5 2.5 5 5.4" />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className="thread-scroll" ref={scrollRef}>

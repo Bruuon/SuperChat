@@ -17,6 +17,7 @@ interface AuthContextValue {
   loginCode: (payload: UserLoginCodeRequest) => Promise<void>;
   register: (payload: UserRegisterRequest) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (patch: Partial<StoredUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -100,9 +101,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((patch: Partial<StoredUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, ...patch };
+      tokenStore.setUser(next);
+      return next;
+    });
+  }, []);
+
   const value = useMemo(
-    () => ({ user, ready, loginPassword, loginCode, register, logout }),
-    [user, ready, loginPassword, loginCode, register, logout],
+    () => ({ user, ready, loginPassword, loginCode, register, logout, updateUser }),
+    [user, ready, loginPassword, loginCode, register, logout, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -11,21 +11,21 @@ import type {
 } from "@/types/api";
 
 export const contactApi = {
-  async searchUser(userId: number, keyword: string): Promise<FriendDetailVO> {
+  async searchUser(userId: string, keyword: string): Promise<FriendDetailVO> {
     const res = await http.get<BaseResponse<FriendDetailVO>>(`/api/contact/${userId}/user/search`, {
       params: { keyword },
     });
     return res.data.data;
   },
 
-  async getFriends(userId: number, key = "", pageNum = 1, pageSize = 100): Promise<PageResponse<FriendDTO>> {
+  async getFriends(userId: string, key = "", pageNum = 1, pageSize = 100): Promise<PageResponse<FriendDTO>> {
     const res = await http.get<BaseResponse<PageResponse<FriendDTO>>>(`/api/contact/${userId}/friend`, {
       params: { key, pageNum, pageSize },
     });
     return res.data.data;
   },
 
-  async sendFriendRequest(userId: number, receiveUserId: number, payload: AddFriendRequest): Promise<boolean> {
+  async sendFriendRequest(userId: string, receiveUserId: string, payload: AddFriendRequest): Promise<boolean> {
     const res = await http.post<BaseResponse<boolean>>(
       `/api/contact/${userId}/friend/${receiveUserId}`,
       payload,
@@ -33,36 +33,36 @@ export const contactApi = {
     return res.data.data;
   },
 
-  async getApplyList(userId: number, pageNum = 1, pageSize = 50): Promise<PageResponse<ApplyFriendDTO>> {
+  async getApplyList(userId: string, pageNum = 1, pageSize = 50): Promise<PageResponse<ApplyFriendDTO>> {
     const res = await http.get<BaseResponse<PageResponse<ApplyFriendDTO>>>(`/api/contact/${userId}/apply`, {
       params: { pageNum, pageSize },
     });
     return res.data.data;
   },
 
-  async getUnreadApplyCount(userId: number): Promise<number> {
+  async getUnreadApplyCount(userId: string): Promise<number> {
     const res = await http.get<BaseResponse<{ count: number }>>(`/api/contact/${userId}/applyCount`);
     return res.data.data.count;
   },
 
-  async deleteFriend(userId: number, friendId: number): Promise<boolean> {
+  async deleteFriend(userId: string, friendId: string): Promise<boolean> {
     const res = await http.delete<BaseResponse<boolean>>(`/api/contact/${userId}/friend/${friendId}`);
     return res.data.data;
   },
 
-  async blockFriend(userId: number, friendId: number): Promise<boolean> {
+  async blockFriend(userId: string, friendId: string): Promise<boolean> {
     const res = await http.post<BaseResponse<boolean>>(`/api/contact/${userId}/block/${friendId}`);
     return res.data.data;
   },
 
-  async unblockFriend(userId: number, friendId: number): Promise<boolean> {
+  async unblockFriend(userId: string, friendId: string): Promise<boolean> {
     const res = await http.delete<BaseResponse<boolean>>(`/api/contact/${userId}/block/${friendId}`);
     return res.data.data;
   },
 
   /** status: 1 通过 2 拒绝 3 已读 */
   async modifyApplicationStatus(
-    userId: number,
+    userId: string,
     status: 1 | 2 | 3,
     payload: ModifyFriendApplicationRequest,
   ): Promise<ModifyFriendApplicationResponse | true> {
@@ -73,7 +73,7 @@ export const contactApi = {
     return res.data.data;
   },
 
-  async getFriendDetail(userId: number, friendId: number): Promise<FriendDetailVO> {
+  async getFriendDetail(userId: string, friendId: string): Promise<FriendDetailVO> {
     const res = await http.get<BaseResponse<FriendDetailVO>>(`/api/contact/${userId}/friend/${friendId}`);
     return res.data.data;
   },

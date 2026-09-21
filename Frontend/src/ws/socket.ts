@@ -1,4 +1,5 @@
 import type { MessageRequest, MessageResponse } from "@/types/api";
+import { parseBigJson } from "@/utils/bigJson";
 
 // RealTimeService 的 Netty WebSocket 不经过网关，直接连到
 // 登录时下发的 nettyUri（形如 "10.68.48.172:9101/ws/netty"）。
@@ -87,7 +88,7 @@ class RealtimeSocket {
       const data = String(evt.data);
       if (data === HEARTBEAT_PONG) return;
       try {
-        const parsed = JSON.parse(data) as MessageResponse;
+        const parsed = parseBigJson<MessageResponse>(data);
         this.messageListeners.forEach((l) => l(parsed));
       } catch {
         // 非 JSON、非心跳的意外帧，忽略

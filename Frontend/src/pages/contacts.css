@@ -52,9 +52,6 @@
 .req-name { font-size: 14.5px; font-weight: 600; }
 .req-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
 .req-actions { display: flex; gap: 6px; flex: none; }
-.pill-btn { border: 0; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; }
-.pill-btn.accept { background: var(--accent); color: var(--accent-ink); }
-.pill-btn.decline { background: var(--line); color: var(--ink-soft); }
 
 .section-label { font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 18px 4px 6px; }
 

@@ -18,13 +18,13 @@ export const redPacketApi = {
     const res = await http.post<BaseResponse<ReceiveResultVO>>("/api/chat/redPacket/receive", payload);
     return res.data.data;
   },
-  async getDetail(redPacketId: number, pageNum = 1, pageSize = 20): Promise<RedPacketDetailVO> {
+  async getDetail(redPacketId: string, pageNum = 1, pageSize = 20): Promise<RedPacketDetailVO> {
     const res = await http.get<BaseResponse<RedPacketDetailVO>>("/api/chat/redPacket/", {
       params: { redPacketId, pageNum, pageSize },
     });
     return res.data.data;
   },
-  async getBasic(redPacketId: number): Promise<RedPacketBasicVO> {
+  async getBasic(redPacketId: string): Promise<RedPacketBasicVO> {
     const res = await http.get<BaseResponse<RedPacketBasicVO>>("/api/chat/redPacket/basic", {
       params: { redPacketId },
     });

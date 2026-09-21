@@ -20,7 +20,7 @@ export const messageApi = {
     return res.data.data;
   },
 
-  async getSessionSummary(sessionId: number, hours: number): Promise<string> {
+  async getSessionSummary(sessionId: string, hours: number): Promise<string> {
     const res = await http.post<BaseResponse<string>>("/api/message/summary", { sessionId, hours });
     return res.data.data;
   },
