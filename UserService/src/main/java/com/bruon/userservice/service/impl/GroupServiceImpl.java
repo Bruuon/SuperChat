@@ -14,12 +14,16 @@ import com.bruon.userservice.constants.FriendStatusEnum;
 import com.bruon.userservice.mapper.FriendMapper;
 import com.bruon.userservice.mapper.SessionMapper;
 import com.bruon.userservice.mapper.UserSessionMapper;
+import com.bruon.common.enums.UserSessionStatusEnum;
+import com.bruon.userservice.mapper.UserMapper;
 import com.bruon.userservice.model.dto.NewGroupSessionNotificationDTO;
 import com.bruon.userservice.model.dto.request.InviteGroupRequest;
 import com.bruon.userservice.model.dto.response.InviteGroupResponse;
 import com.bruon.userservice.model.entity.Friend;
 import com.bruon.userservice.model.entity.Session;
+import com.bruon.userservice.model.entity.User;
 import com.bruon.userservice.model.entity.UserSession;
+import com.bruon.userservice.model.vo.GroupMemberVO;
 import com.bruon.userservice.service.GroupService;
 import com.bruon.userservice.service.NotificationService;
 import com.bruon.userservice.service.UserSessionService;
@@ -27,6 +31,9 @@ import com.bruon.userservice.service.UserSessionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.Map;
 
 /**
  * 群组服务实现类
@@ -40,6 +47,7 @@ public class GroupServiceImpl implements GroupService {
     private final FriendMapper friendMapper;
     private final NotificationService notificationService;
     private final UserSessionService userSessionService;
+    private final UserMapper userMapper;
 
     /**
      * 用户角色常量
@@ -62,12 +70,14 @@ public class GroupServiceImpl implements GroupService {
                             UserSessionMapper userSessionMapper,
                             FriendMapper friendMapper,
                             NotificationService notificationService,
-                            UserSessionService userSessionService) {
+                            UserSessionService userSessionService,
+                            UserMapper userMapper) {
         this.sessionMapper = sessionMapper;
         this.userSessionMapper = userSessionMapper;
         this.friendMapper = friendMapper;
         this.notificationService = notificationService;
         this.userSessionService = userSessionService;
+        this.userMapper = userMapper;
     }
 
     /**
@@ -302,5 +312,80 @@ public class GroupServiceImpl implements GroupService {
         notification.setCreatorId(creatorId);
         notification.setMembersCount(membersCount);
         return notification;
+    }
+
+    /* ===================== 成员查询 / 踢人 / 退群 ===================== */
+
+    @Override
+    public List<GroupMemberVO> getMembers(Long sessionId) {
+        validateSession(sessionId);
+
+        LambdaQueryWrapper<UserSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserSession::getSessionId, sessionId)
+                .eq(UserSession::getStatus, SESSION_STATUS_NORMAL);
+        List<UserSession> memberSessions = userSessionMapper.selectList(wrapper);
+        ThrowUtils.throwIf(memberSessions.isEmpty(), ErrorCode.NOT_FOUND_ERROR, "群聊不存在或已解散");
+
+        List<Long> memberIds = memberSessions.stream().map(UserSession::getUserId).collect(Collectors.toList());
+        LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+        userWrapper.in(User::getUserId, memberIds);
+        Map<Long, User> userMap = userMapper.selectList(userWrapper).stream()
+                .collect(Collectors.toMap(User::getUserId, u -> u));
+
+        return memberSessions.stream()
+                .sorted(Comparator.comparingInt(UserSession::getRole))
+                .map(us -> {
+                    GroupMemberVO vo = new GroupMemberVO();
+                    vo.setUserId(String.valueOf(us.getUserId()));
+                    vo.setRole(us.getRole());
+                    User user = userMap.get(us.getUserId());
+                    if (user != null) {
+                        vo.setNickname(user.getNickname());
+                        vo.setAvatar(user.getAvatar());
+                    }
+                    return vo;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void kickMember(Long sessionId, Long operatorId, Long targetId) {
+        ThrowUtils.throwIf(operatorId.equals(targetId), ErrorCode.PARAMS_ERROR, "不能把自己踢出群聊，退群请用退群接口");
+        validateSession(sessionId);
+        validateInviterPermission(sessionId, operatorId); // 复用：要求操作人是群主或管理员
+
+        LambdaQueryWrapper<UserSession> targetWrapper = new LambdaQueryWrapper<>();
+        targetWrapper.eq(UserSession::getSessionId, sessionId)
+                .eq(UserSession::getUserId, targetId)
+                .eq(UserSession::getStatus, SESSION_STATUS_NORMAL);
+        UserSession target = userSessionMapper.selectOne(targetWrapper);
+        ThrowUtils.throwIf(target == null, ErrorCode.NOT_FOUND_ERROR, "该用户不在群聊中");
+        ThrowUtils.throwIf(target.getRole() == USER_ROLE_GROUP_OWNER, ErrorCode.NO_AUTH_ERROR, "不能踢出群主");
+
+        // UserSession 是 (user_id, session_id) 联合主键，没有单独的 @TableId，
+        // updateById 用不了（MyBatis-Plus 找不到对应的 SQL），改用带 Wrapper 条件的 update
+        UserSession patch = new UserSession();
+        patch.setStatus(UserSessionStatusEnum.DELETED.getCode());
+        userSessionMapper.update(patch, targetWrapper);
+        log.info("群成员被踢出，sessionId: {}, operatorId: {}, targetId: {}", sessionId, operatorId, targetId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void leaveGroup(Long sessionId, Long userId) {
+        LambdaQueryWrapper<UserSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserSession::getSessionId, sessionId)
+                .eq(UserSession::getUserId, userId)
+                .eq(UserSession::getStatus, SESSION_STATUS_NORMAL);
+        UserSession userSession = userSessionMapper.selectOne(wrapper);
+        ThrowUtils.throwIf(userSession == null, ErrorCode.NOT_FOUND_ERROR, "你不在这个群聊中");
+
+        // 简化处理：群主退群不会自动转让群主身份，群聊会失去群主（后续管理功能可以再补转让逻辑）
+        // UserSession 是联合主键，同上不能用 updateById
+        UserSession patch = new UserSession();
+        patch.setStatus(UserSessionStatusEnum.DELETED.getCode());
+        userSessionMapper.update(patch, wrapper);
+        log.info("用户退群，sessionId: {}, userId: {}", sessionId, userId);
     }
 }

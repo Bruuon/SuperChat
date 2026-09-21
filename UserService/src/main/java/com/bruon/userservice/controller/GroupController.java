@@ -8,12 +8,15 @@ import com.bruon.userservice.model.dto.request.CreateGroupRequest;
 import com.bruon.userservice.model.dto.request.InviteGroupRequest;
 import com.bruon.userservice.model.dto.response.CreateGroupResponse;
 import com.bruon.userservice.model.dto.response.InviteGroupResponse;
+import com.bruon.userservice.model.vo.GroupMemberVO;
 import com.bruon.userservice.service.GroupService;
 import com.bruon.userservice.service.SessionService;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 群组Controller
@@ -67,6 +70,59 @@ public class GroupController {
             return ResultUtils.error(e.getCode(), e.getMessage());
         } catch (Exception e) {
             log.error("群聊邀请失败，原因：{}", e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 查询群成员列表
+     */
+    @GetMapping("/{sessionId}/members")
+    public BaseResponse<?> getMembers(@PathVariable Long sessionId) {
+        try {
+            return ResultUtils.success(groupService.getMembers(sessionId));
+        } catch (BusinessException e) {
+            log.error("查询群成员失败，原因：{}", e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("查询群成员失败，原因：{}", e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 踢出群成员（仅群主/管理员可操作）
+     */
+    @DeleteMapping("/{sessionId}/member/{targetId}")
+    public BaseResponse<?> kickMember(
+            @PathVariable Long sessionId,
+            @PathVariable Long targetId,
+            @RequestParam Long operatorId) {
+        try {
+            groupService.kickMember(sessionId, operatorId, targetId);
+            return ResultUtils.success(true);
+        } catch (BusinessException e) {
+            log.error("踢出群成员失败，原因：{}", e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("踢出群成员失败，原因：{}", e.getMessage(), e);
+            return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 退出群聊
+     */
+    @PostMapping("/{sessionId}/leave")
+    public BaseResponse<?> leaveGroup(@PathVariable Long sessionId, @RequestParam Long userId) {
+        try {
+            groupService.leaveGroup(sessionId, userId);
+            return ResultUtils.success(true);
+        } catch (BusinessException e) {
+            log.error("退出群聊失败，原因：{}", e.getMessage());
+            return ResultUtils.error(e.getCode(), e.getMessage());
+        } catch (Exception e) {
+            log.error("退出群聊失败，原因：{}", e.getMessage(), e);
             return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
         }
     }
