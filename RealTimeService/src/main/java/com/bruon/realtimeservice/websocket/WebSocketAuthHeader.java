@@ -7,10 +7,13 @@ import io.jsonwebtoken.Claims;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
+
+import java.util.List;
 
 
 @Slf4j
@@ -22,7 +25,19 @@ public class WebSocketAuthHeader extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg)  {
         if (msg instanceof FullHttpRequest request){
+            // 浏览器原生 WebSocket API 无法自定义握手请求头，
+            // 所以除了 Authorization 头，也兼容从查询参数 ?token= 读取
             String authHeader = request.headers().get("Authorization");
+            QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+            if (authHeader == null || authHeader.isEmpty()) {
+                List<String> tokenParams = decoder.parameters().get("token");
+                if (tokenParams != null && !tokenParams.isEmpty()) {
+                    authHeader = tokenParams.get(0);
+                }
+            }
+            // WebSocketServerProtocolHandler 按精确路径匹配握手 URI，
+            // 握手请求带上了查询参数就匹配不到，这里转发前把它裁掉
+            request.setUri(decoder.path());
             if (authHeader == null || authHeader.isEmpty()) {
                 ctx.close();
                 return;

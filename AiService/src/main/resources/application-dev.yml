@@ -20,7 +20,7 @@ pgvector:
   host: localhost
   port : 54328
   user: root
-  password: e65K4t7z1
+  password: Ml424242
   table: dp_embedding
 
 rag:

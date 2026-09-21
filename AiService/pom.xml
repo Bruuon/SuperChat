@@ -26,6 +26,8 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <!-- langchain4j-community-redis 1.18 needs Jedis 7.x; Spring Boot 3.5 pins 6.0.0 -->
+        <jedis.version>7.2.1</jedis.version>
     </properties>
     <dependencyManagement>
         <dependencies>

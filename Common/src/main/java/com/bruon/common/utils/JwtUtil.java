@@ -3,11 +3,11 @@ package com.bruon.common.utils;
 
 import com.bruon.common.constant.CommonConstant;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -38,7 +38,10 @@ public final class JwtUtil {
      * 获取签名密钥（从常量类读取，避免硬编码）
      */
     public static Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(CommonConstant.TOKEN_SECRET_KEY);
+        // TOKEN_SECRET_KEY 是明文密钥，不是 Base64；此前误当 Base64 解码，
+        // 把 44 字节的明文压成 31 字节（248 位），低于 HMAC-SHA256 要求的
+        // 256 位下限，导致签发 JWT 直接抛 WeakKeyException，登录/注册全挂。
+        byte[] keyBytes = CommonConstant.TOKEN_SECRET_KEY.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
