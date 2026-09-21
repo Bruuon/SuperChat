@@ -1,0 +1,75 @@
+.contacts-shell {
+  height: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+@media (min-width: 601px) {
+  .contacts-shell { border-inline: 1px solid var(--line); }
+}
+.contacts-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.contacts-head .icon-pill-btn { flex: none; }
+.contacts-title { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; flex: 1; }
+
+.contacts-search-row { display: flex; gap: 8px; padding: 12px 18px 4px; }
+.contacts-search-row .field { margin-bottom: 0; }
+.contacts-search-row button { flex: none; }
+
+.search-result {
+  margin: 12px 18px 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.search-result .info { flex: 1; min-width: 0; }
+.search-result .name { font-size: 14.5px; font-weight: 600; }
+.search-result .sub { font-size: 12.5px; color: var(--muted); }
+
+.contacts-body { flex: 1; overflow-y: auto; padding: 6px 18px 30px; }
+
+.req-card {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.req-body { flex: 1; min-width: 0; }
+.req-name { font-size: 14.5px; font-weight: 600; }
+.req-sub { font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.req-actions { display: flex; gap: 6px; flex: none; }
+.pill-btn { border: 0; border-radius: 999px; padding: 6px 13px; font-size: 12.5px; font-weight: 600; }
+.pill-btn.accept { background: var(--accent); color: var(--accent-ink); }
+.pill-btn.decline { background: var(--line); color: var(--ink-soft); }
+
+.section-label { font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 18px 4px 6px; }
+
+.friend-row { display: flex; align-items: center; gap: 12px; padding: 9px 6px; border-radius: 12px; }
+.friend-row:hover { background: var(--line); }
+.friend-row .avatar { width: 38px; height: 38px; font-size: 14px; }
+.friend-name { font-size: 14.5px; font-weight: 600; }
+.friend-note { font-size: 12px; color: var(--muted); }
+.friend-actions { margin-left: auto; display: flex; gap: 4px; opacity: 0; transition: opacity .15s ease; }
+.friend-row:hover .friend-actions { opacity: 1; }
+.friend-actions button {
+  border: 0; background: var(--line); width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center; color: var(--ink-soft);
+}
+.friend-actions button svg { width: 13px; height: 13px; }
+.friend-actions button:hover { background: var(--line-strong); }
+
+.contacts-empty { padding: 40px 0; text-align: center; color: var(--muted); font-size: 13.5px; }

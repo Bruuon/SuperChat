@@ -1,0 +1,90 @@
+/* ============ Design tokens ============
+   苹果式克制配色：大面积中性色取自系统灰阶，
+   头像用莫兰迪低饱和色，唯一的高亮只留给
+   可交互元素（主题色）与红包（庆祝色）。
+*/
+:root {
+  --ink: #1D1D1F;
+  --ink-soft: #48484D;
+  --muted: #6E6E73;
+  --paper: #F5F5F7;
+  --surface: #FFFFFF;
+  --surface-2: #ECECEF;
+  --line: rgba(60, 60, 67, 0.13);
+  --line-strong: rgba(60, 60, 67, 0.22);
+
+  --accent: #1D6FA5;
+  --accent-ink: #FFFFFF;
+
+  --av-1: #8C97A6;
+  --av-2: #9CA593;
+  --av-3: #B4A08E;
+  --av-4: #A79098;
+  --av-5: #9B9186;
+  --av-6: #84A0A0;
+  --av-bot: #3E4750;
+
+  --packet: #C23B2E;
+  --packet-2: #7A1F17;
+  --packet-gold: #D9A64A;
+  --good: #3FA05A;
+  --danger: #C0392B;
+
+  --shadow: 0 20px 50px -18px rgba(20, 20, 30, 0.28);
+  --shadow-sm: 0 3px 14px rgba(20, 20, 30, 0.08);
+  --radius-lg: 26px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #F5F5F7;
+    --ink-soft: #D6D6DA;
+    --muted: #98989D;
+    --paper: #000000;
+    --surface: #1C1C1E;
+    --surface-2: #131315;
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.18);
+
+    --accent: #5CACDE;
+    --accent-ink: #12181C;
+
+    --packet: #E86A52;
+    --packet-2: #8A3323;
+    --packet-gold: #E8C173;
+    --good: #5FC17C;
+    --danger: #E0584A;
+
+    --shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.65);
+    --shadow-sm: 0 4px 18px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ink: #F5F5F7;
+  --ink-soft: #D6D6DA;
+  --muted: #98989D;
+  --paper: #000000;
+  --surface: #1C1C1E;
+  --surface-2: #131315;
+  --line: rgba(255, 255, 255, 0.10);
+  --line-strong: rgba(255, 255, 255, 0.18);
+
+  --accent: #5CACDE;
+  --accent-ink: #12181C;
+
+  --packet: #E86A52;
+  --packet-2: #8A3323;
+  --packet-gold: #E8C173;
+  --good: #5FC17C;
+  --danger: #E0584A;
+
+  --shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.65);
+  --shadow-sm: 0 4px 18px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
